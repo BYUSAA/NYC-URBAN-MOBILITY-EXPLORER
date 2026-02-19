@@ -4,199 +4,240 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NYC TLC Urban Mobility Explorer — Yellow Taxi 2019</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #0a0c10;
-    --bg2: #0f1218;
-    --bg3: #141820;
-    --card: #161b24;
-    --card2: #1c2330;
-    --border: #252d3a;
-    --border2: #2e3847;
-    --yellow: #f5c518;
-    --yellow2: #ffd84d;
-    --yellow-dim: rgba(245,197,24,0.12);
-    --yellow-glow: rgba(245,197,24,0.25);
-    --cyan: #00e5c3;
-    --cyan-dim: rgba(0,229,195,0.1);
-    --red: #ff4a6b;
-    --red-dim: rgba(255,74,107,0.1);
-    --text: #e8edf5;
-    --text2: #8a97aa;
-    --text3: #5a6677;
-    --green: #22d17a;
-    --orange: #ff8c42;
-    --purple: #9b7ff4;
+  * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    transition: background-color 0.3s ease, color 0.2s ease, border-color 0.2s ease;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    font-family: 'Inter', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
   }
 
-  /* ── SIDEBAR ───────────────────────────────── */
+  /* Light mode variables (default) */
+  body.light-mode {
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F5F5F5;
+    --bg-tertiary: #EBEBEB;
+    --card-bg: #FFFFFF;
+    --card-bg-hover: #F0F0F0;
+    --border-light: #DDDDDD;
+    --border-medium: #CCCCCC;
+    --text-primary: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --text-tertiary: #6F6F6F;
+    --accent-1: #333333;
+    --accent-2: #4B4B4B;
+    --accent-3: #2F4F4F;
+    --accent-4: #5C5147;
+    --accent-5: #2F4F2F;
+    --gradient-1: linear-gradient(135deg, #333333, #4B4B4B);
+    --gradient-2: linear-gradient(135deg, #2F4F4F, #254B4B);
+    --gradient-3: linear-gradient(135deg, #3F3F6B, #2E2E4B);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Dark mode variables */
+body.dark-mode {
+    --bg-primary: #2a2929;
+    --bg-secondary: #000000;
+    --bg-tertiary: #5f5f5f;
+    --card-bg: #424242;
+    --card-bg-hover: #7c7c7c;
+    --border-light: #ffffff;
+    --border-medium: #7a7a7a;
+    --text-primary: #88b6b6;
+    --text-secondary: #aeaeae;
+    --text-tertiary: #ffffff;
+    --accent-1: #223a22;
+    --accent-2: #4e4a4a;
+    --accent-3: #DDE1E4;
+    --accent-4: #926166;
+    --accent-5: #5b90b4;
+    --gradient-1: linear-gradient(135deg, #4b4b4b, #C0C0C0);
+    --gradient-2: linear-gradient(135deg, #9c9c9c, #B0E0E6);
+    --gradient-3: linear-gradient(135deg, #E6E6FA, #E5E4F2);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+  }
+
+  /* Theme toggle */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    background: var(--bg-tertiary);
+    border-radius: 30px;
+    padding: 2px;
+    border: 1px solid var(--border-light);
+    cursor: pointer;
+    margin-right: 12px;
+  }
+
+  .theme-option {
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .theme-option.active {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: var(--shadow);
+  }
+
+  /* SIDEBAR */
   .sidebar {
     position: fixed; left: 0; top: 0; bottom: 0;
     width: 240px;
-    background: var(--bg2);
-    border-right: 1px solid var(--border);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-light);
     display: flex; flex-direction: column;
     z-index: 100;
-    transition: transform 0.3s ease;
   }
 
   .sidebar-logo {
     padding: 24px 20px 20px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
   }
 
   .logo-badge {
     display: inline-flex; align-items: center; gap: 8px;
-    background: var(--yellow-dim);
-    border: 1px solid var(--yellow);
-    border-radius: 6px;
-    padding: 6px 10px;
-    margin-bottom: 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-medium);
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin-bottom: 12px;
   }
 
   .logo-dot {
-    width: 8px; height: 8px;
-    background: var(--yellow);
+    width: 6px; height: 6px;
+    background: var(--accent-1);
     border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
   }
 
   .logo-text {
-    font-family: 'DM Mono', monospace;
+    font-family: 'Inter', monospace;
     font-size: 10px;
-    color: var(--yellow);
-    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+    letter-spacing: 0.05em;
     text-transform: uppercase;
   }
 
   .sidebar-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 18px;
-    font-weight: 800;
-    color: var(--text);
-    line-height: 1.2;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
   }
 
   .sidebar-sub {
     font-size: 11px;
-    color: var(--text3);
-    margin-top: 2px;
-    font-family: 'DM Mono', monospace;
+    color: var(--text-tertiary);
+    margin-top: 4px;
   }
 
   .nav { padding: 16px 12px; flex: 1; }
 
   .nav-section {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    color: var(--text3);
-    letter-spacing: 0.15em;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 0 8px;
     margin: 16px 0 6px;
+    font-weight: 500;
   }
 
   .nav-item {
     display: flex; align-items: center; gap: 10px;
-    padding: 9px 12px;
-    border-radius: 8px;
+    padding: 10px 12px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s;
     text-decoration: none;
-    color: var(--text2);
-    font-size: 13.5px;
+    color: var(--text-secondary);
+    font-size: 13px;
     font-weight: 400;
-    position: relative;
     margin-bottom: 2px;
   }
 
-  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item:hover { 
+    background: var(--bg-tertiary); 
+    color: var(--text-primary); 
+  }
 
   .nav-item.active {
-    background: var(--yellow-dim);
-    color: var(--yellow);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
     font-weight: 500;
+    border-left: 3px solid var(--accent-1);
   }
-
-  .nav-item.active::before {
-    content: '';
-    position: absolute; left: 0; top: 50%;
-    transform: translateY(-50%);
-    width: 3px; height: 20px;
-    background: var(--yellow);
-    border-radius: 0 2px 2px 0;
-  }
-
-  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
 
   .nav-badge {
     margin-left: auto;
-    font-family: 'DM Mono', monospace;
     font-size: 9px;
-    background: var(--border2);
-    color: var(--text3);
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
     padding: 2px 6px;
     border-radius: 10px;
+    border: 1px solid var(--border-light);
   }
 
   .sidebar-footer {
     padding: 16px 20px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-light);
   }
 
   .data-badge {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 10px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    padding: 12px;
   }
 
   .data-badge-label {
-    font-family: 'DM Mono', monospace;
     font-size: 9px;
-    color: var(--text3);
+    color: var(--text-tertiary);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
   }
 
   .data-badge-value {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
-    font-weight: 700;
-    color: var(--cyan);
-    margin-top: 2px;
+    font-weight: 600;
+    color: #282828;
+    margin-top: 4px;
   }
 
-  /* ── MAIN ───────────────────────────────────── */
+  /* MAIN */
   .main {
     margin-left: 240px;
     min-height: 100vh;
     display: flex; flex-direction: column;
   }
 
-  /* ── TOP BAR ────────────────────────────────── */
+  /* TOP BAR */
   .topbar {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(10,12,16,0.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
+    background: var(--bg-primary);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-light);
     padding: 0 32px;
     height: 60px;
     display: flex; align-items: center; justify-content: space-between;
@@ -205,64 +246,75 @@
   .topbar-left { display: flex; align-items: center; gap: 12px; }
 
   .page-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 16px;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .breadcrumb {
-    font-family: 'DM Mono', monospace;
     font-size: 11px;
-    color: var(--text3);
+    color: var(--text-tertiary);
   }
 
-  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-right { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+  }
 
   .filter-pill {
     display: inline-flex; align-items: center; gap: 6px;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
     border-radius: 20px;
     padding: 5px 12px;
     font-size: 12px;
-    color: var(--text2);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.15s;
   }
 
-  .filter-pill:hover { border-color: var(--yellow); color: var(--yellow); }
-
-  .filter-pill.active {
-    background: var(--yellow-dim);
-    border-color: var(--yellow);
-    color: var(--yellow);
+  .filter-pill:hover { 
+    background: var(--card-bg-hover);
+    border-color: var(--border-medium);
   }
 
-  /* ── PAGE CONTENT ───────────────────────────── */
+  .filter-pill.active {
+    background: var(--bg-primary);
+    border-color: var(--accent-1);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* PAGE CONTENT */
   .page { display: none; padding: 28px 32px; animation: fadeIn 0.3s ease; }
   .page.active { display: block; }
 
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(6px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
 
-  /* ── SECTION HEADER ─────────────────────────── */
+  /* SECTION HEADER */
   .section-header {
     display: flex; align-items: flex-end; justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
   }
 
   .section-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
+    font-family: 'Inter', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   .section-sub {
     font-size: 13px;
-    color: var(--text3);
-    margin-top: 3px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
   }
 
-  /* ── KPI GRID ───────────────────────────────── */
+  /* KPI GRID */
   .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -271,70 +323,62 @@
   }
 
   .kpi-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
     padding: 20px;
     position: relative;
     overflow: hidden;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
   }
 
-  .kpi-card:hover { border-color: var(--border2); }
+  .kpi-card:hover { 
+    border-color: var(--border-medium);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
 
   .kpi-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 2px;
+    height: 3px;
+    background: var(--gradient-1);
   }
 
-  .kpi-card.yellow::before { background: var(--yellow); }
-  .kpi-card.cyan::before { background: var(--cyan); }
-  .kpi-card.red::before { background: var(--red); }
-  .kpi-card.green::before { background: var(--green); }
-  .kpi-card.orange::before { background: var(--orange); }
-  .kpi-card.purple::before { background: var(--purple); }
-
   .kpi-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--text3);
+    font-size: 11px;
+    color: var(--text-tertiary);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     margin-bottom: 8px;
+    font-weight: 500;
   }
 
   .kpi-value {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 28px;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    color: var(--text-primary);
   }
 
-  .kpi-card.yellow .kpi-value { color: var(--yellow); }
-  .kpi-card.cyan .kpi-value { color: var(--cyan); }
-  .kpi-card.red .kpi-value { color: var(--red); }
-  .kpi-card.green .kpi-value { color: var(--green); }
-  .kpi-card.orange .kpi-value { color: var(--orange); }
-  .kpi-card.purple .kpi-value { color: var(--purple); }
-
   .kpi-sub {
-    font-size: 11.5px;
-    color: var(--text3);
+    font-size: 11px;
+    color: var(--text-tertiary);
   }
 
   .kpi-trend {
     display: inline-flex; align-items: center; gap: 3px;
     font-size: 11px;
-    font-family: 'DM Mono', monospace;
   }
 
-  .kpi-trend.up { color: var(--green); }
-  .kpi-trend.down { color: var(--red); }
+  .kpi-trend.up { color: var(--accent-5); }
+  .kpi-trend.down { color: var(--accent-4); }
 
-  /* ── CHART CARDS ────────────────────────────── */
+  /* CHART CARDS */
   .chart-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -343,10 +387,11 @@
   }
 
   .chart-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
     padding: 20px;
+    box-shadow: var(--shadow);
   }
 
   .chart-card.wide { grid-column: span 2; }
@@ -358,14 +403,14 @@
   }
 
   .chart-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
   }
 
   .chart-sub {
-    font-size: 11.5px;
-    color: var(--text3);
+    font-size: 11px;
+    color: var(--text-tertiary);
     margin-top: 2px;
   }
 
@@ -376,35 +421,37 @@
   .legend-item {
     display: flex; align-items: center; gap: 5px;
     font-size: 11px;
-    color: var(--text2);
+    color: var(--text-secondary);
   }
 
   .legend-dot {
     width: 8px; height: 8px;
     border-radius: 50%;
+    background: var(--accent-1);
   }
 
   canvas { max-height: 280px; }
 
-  /* ── TABLE ──────────────────────────────────── */
+  /* TABLE */
   .data-table-wrap {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
     overflow: hidden;
     margin-bottom: 24px;
+    box-shadow: var(--shadow);
   }
 
   .table-header {
     padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
     display: flex; align-items: center; justify-content: space-between;
   }
 
   .table-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
   }
 
   .table-controls {
@@ -412,20 +459,22 @@
   }
 
   .search-input {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 6px 12px;
-    color: var(--text);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text-primary);
     font-size: 12px;
-    font-family: 'DM Sans', sans-serif;
     outline: none;
     width: 180px;
-    transition: border-color 0.2s;
   }
 
-  .search-input:focus { border-color: var(--yellow); }
-  .search-input::placeholder { color: var(--text3); }
+  .search-input:focus { 
+    border-color: var(--accent-1);
+    background: var(--bg-primary);
+  }
+
+  .search-input::placeholder { color: var(--text-tertiary); }
 
   select.search-input {
     cursor: pointer;
@@ -434,10 +483,9 @@
 
   .btn {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 14px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
     font-size: 12px;
-    font-family: 'DM Sans', sans-serif;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s;
@@ -445,32 +493,42 @@
   }
 
   .btn-primary {
-    background: var(--yellow);
-    color: #000;
+    background: var(--gradient-1);
+    color: var(--bg-primary);
   }
 
-  .btn-primary:hover { background: var(--yellow2); }
+  .btn-primary:hover { 
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
 
   .btn-secondary {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text2);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
   }
 
-  .btn-secondary:hover { border-color: var(--yellow); color: var(--yellow); }
+  .btn-secondary:hover { 
+    background: var(--card-bg-hover);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
+  }
 
   .btn-icon {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text2);
-    padding: 7px 10px;
-    border-radius: 8px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    transition: all 0.15s;
   }
 
-  .btn-icon:hover { border-color: var(--yellow); color: var(--yellow); }
+  .btn-icon:hover { 
+    background: var(--card-bg-hover);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
+  }
 
   table {
     width: 100%;
@@ -479,67 +537,73 @@
   }
 
   thead th {
-    background: var(--bg3);
-    padding: 10px 16px;
+    background: var(--bg-secondary);
+    padding: 12px 16px;
     text-align: left;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--text3);
+    font-size: 11px;
+    color: var(--text-tertiary);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     cursor: pointer;
     white-space: nowrap;
-    user-select: none;
-    transition: color 0.15s;
+    font-weight: 600;
   }
 
-  thead th:hover { color: var(--yellow); }
-  thead th.sorted { color: var(--yellow); }
+  thead th:hover { color: var(--text-primary); }
 
   tbody tr {
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
     transition: background 0.1s;
   }
 
   tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--bg3); }
+  tbody tr:hover { background: var(--bg-secondary); }
 
   td {
-    padding: 10px 16px;
-    color: var(--text2);
+    padding: 12px 16px;
+    color: var(--text-secondary);
     white-space: nowrap;
   }
 
-  td.highlight { color: var(--text); font-weight: 500; }
+  td.highlight { color: var(--text-primary); font-weight: 500; }
 
   .badge {
     display: inline-block;
-    padding: 2px 8px;
+    padding: 3px 8px;
     border-radius: 4px;
-    font-family: 'DM Mono', monospace;
     font-size: 10px;
     font-weight: 500;
+    border: 1px solid var(--border-light);
   }
 
-  .badge-yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(245,197,24,0.3); }
-  .badge-cyan { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(0,229,195,0.3); }
-  .badge-red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,74,107,0.3); }
-  .badge-green { background: rgba(34,209,122,0.1); color: var(--green); border: 1px solid rgba(34,209,122,0.3); }
-  .badge-orange { background: rgba(255,140,66,0.1); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
-  .badge-purple { background: rgba(155,127,244,0.1); color: var(--purple); border: 1px solid rgba(155,127,244,0.3); }
-  .badge-gray { background: var(--bg3); color: var(--text3); border: 1px solid var(--border2); }
+  .badge-primary { 
+    background: var(--bg-tertiary); 
+    color: var(--text-primary); 
+    border-color: var(--border-medium);
+  }
+  
+  .badge-secondary { 
+    background: var(--bg-primary); 
+    color: var(--text-secondary); 
+    border-color: var(--border-light);
+  }
+  
+  .badge-accent { 
+    background: var(--bg-tertiary); 
+    color: var(--accent-4); 
+    border-color: var(--accent-4);
+  }
 
-  /* ── PAGINATION ─────────────────────────────── */
+  /* PAGINATION */
   .pagination {
-    padding: 12px 20px;
-    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-light);
     display: flex; align-items: center; justify-content: space-between;
   }
 
   .pagination-info {
     font-size: 12px;
-    color: var(--text3);
-    font-family: 'DM Mono', monospace;
+    color: var(--text-tertiary);
   }
 
   .pagination-btns { display: flex; gap: 4px; }
@@ -548,20 +612,29 @@
     width: 32px; height: 32px;
     display: flex; align-items: center; justify-content: center;
     border-radius: 6px;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text2);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 12px;
-    font-family: 'DM Mono', monospace;
     transition: all 0.15s;
   }
 
-  .page-btn:hover { border-color: var(--yellow); color: var(--yellow); }
-  .page-btn.active { background: var(--yellow-dim); border-color: var(--yellow); color: var(--yellow); }
+  .page-btn:hover { 
+    background: var(--card-bg-hover);
+    border-color: var(--border-medium);
+    color: var(--text-primary); 
+  }
+  
+  .page-btn.active { 
+    background: var(--bg-primary);
+    border-color: var(--accent-1);
+    color: var(--text-primary); 
+  }
+  
   .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* ── STAT ROWS ──────────────────────────────── */
+  /* STAT ROWS */
   .stat-row {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -570,10 +643,11 @@
   }
 
   .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--shadow);
   }
 
   .bar-item {
@@ -583,7 +657,7 @@
 
   .bar-label {
     font-size: 12px;
-    color: var(--text2);
+    color: var(--text-secondary);
     width: 140px;
     flex-shrink: 0;
     white-space: nowrap;
@@ -593,7 +667,7 @@
 
   .bar-track {
     flex: 1;
-    background: var(--bg3);
+    background: var(--bg-tertiary);
     border-radius: 3px;
     height: 6px;
     overflow: hidden;
@@ -602,37 +676,38 @@
   .bar-fill {
     height: 100%;
     border-radius: 3px;
+    background: var(--gradient-1);
     transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
   }
 
   .bar-value {
-    font-family: 'DM Mono', monospace;
     font-size: 11px;
-    color: var(--text3);
+    color: var(--text-tertiary);
     width: 55px;
     text-align: right;
     flex-shrink: 0;
   }
 
-  /* ── MAP PLACEHOLDER ────────────────────────── */
+  /* MAP PLACEHOLDER */
   .map-container {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
     overflow: hidden;
     margin-bottom: 24px;
+    box-shadow: var(--shadow);
   }
 
   .map-header {
     padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
     display: flex; align-items: center; justify-content: space-between;
   }
 
   .map-body {
     position: relative;
     height: 420px;
-    background: #0d1119;
+    background: var(--bg-secondary);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden;
   }
@@ -643,13 +718,14 @@
     top: 0; left: 0;
   }
 
-  /* ── FILTER PANEL ───────────────────────────── */
+  /* FILTER PANEL */
   .filter-panel {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
     padding: 20px;
     margin-bottom: 24px;
+    box-shadow: var(--shadow);
   }
 
   .filter-grid {
@@ -661,31 +737,32 @@
 
   .filter-group label {
     display: block;
-    font-family: 'DM Mono', monospace;
     font-size: 10px;
-    color: var(--text3);
+    color: var(--text-tertiary);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     margin-bottom: 6px;
+    font-weight: 500;
   }
 
   .filter-select, .filter-input {
     width: 100%;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 7px 10px;
-    color: var(--text);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text-primary);
     font-size: 12px;
-    font-family: 'DM Sans', sans-serif;
     outline: none;
-    transition: border-color 0.2s;
     cursor: pointer;
   }
 
-  .filter-select:focus, .filter-input:focus { border-color: var(--yellow); }
+  .filter-select:focus, .filter-input:focus { 
+    border-color: var(--accent-1);
+    background: var(--bg-primary);
+  }
 
-  /* ── INSIGHTS ───────────────────────────────── */
+  /* INSIGHTS */
   .insight-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -694,49 +771,58 @@
   }
 
   .insight-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 24px;
     position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+  }
+
+  .insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
   }
 
   .insight-card::after {
     content: attr(data-num);
     position: absolute;
     right: 16px; top: 12px;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 72px;
     font-weight: 800;
-    color: rgba(255,255,255,0.03);
+    color: var(--bg-tertiary);
     line-height: 1;
   }
 
-  .insight-icon {
-    font-size: 24px;
-    margin-bottom: 10px;
-  }
-
   .insight-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
   }
 
   .insight-body {
     font-size: 13px;
-    color: var(--text2);
+    color: var(--text-secondary);
     line-height: 1.6;
+    position: relative;
+    z-index: 1;
   }
 
   .insight-highlight {
-    color: var(--yellow);
+    color: var(--text-primary);
     font-weight: 600;
+    background: var(--bg-tertiary);
+    padding: 2px 4px;
+    border-radius: 3px;
   }
 
-  /* ── ALGORITHM PAGE ─────────────────────────── */
+  /* ALGORITHM PAGE */
   .algo-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -745,68 +831,93 @@
   }
 
   .code-block {
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
     padding: 16px;
-    font-family: 'DM Mono', monospace;
+    font-family: 'Inter', monospace;
     font-size: 12px;
-    color: var(--cyan);
+    color: var(--text-secondary);
     line-height: 1.7;
     overflow-x: auto;
     white-space: pre;
   }
 
-  .code-comment { color: var(--text3); }
-  .code-keyword { color: var(--yellow); }
-  .code-string { color: var(--green); }
-  .code-num { color: var(--orange); }
+  .code-comment { color: var(--text-tertiary); }
+  .code-keyword { color: var(--accent-4); font-weight: 600; }
+  .code-string { color: var(--accent-5); }
+  .code-num { color: var(--accent-3); }
 
   .complexity-table td, .complexity-table th {
     padding: 8px 12px;
   }
 
-  /* ── ZONE EXPLORER ──────────────────────────── */
+  /* ZONE EXPLORER */
   .zone-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
+    gap: 12px;
     max-height: 480px;
     overflow-y: auto;
     padding-right: 4px;
   }
 
   .zone-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.15s;
+    box-shadow: var(--shadow);
   }
 
   .zone-card:hover {
-    border-color: var(--yellow);
-    background: var(--card2);
+    border-color: var(--border-medium);
+    background: var(--card-bg-hover);
+    transform: translateY(-2px);
   }
 
   .zone-card.selected {
-    border-color: var(--yellow);
-    background: var(--yellow-dim);
+    border-color: var(--accent-1);
+    background: var(--bg-tertiary);
   }
 
-  .zone-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
-  .zone-borough { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
-  .zone-trips { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--yellow); margin-top: 8px; }
-  .zone-label { font-size: 10px; color: var(--text3); }
+  .zone-name { 
+    font-size: 13px; 
+    font-weight: 600; 
+    margin-bottom: 4px; 
+    color: var(--text-primary);
+  }
+  
+  .zone-borough { 
+    font-size: 10px; 
+    color: var(--text-tertiary); 
+  }
+  
+  .zone-trips { 
+    font-family: 'Inter', sans-serif; 
+    font-size: 18px; 
+    font-weight: 700; 
+    color: #a3a3a3;
+    margin-top: 10px; 
+  }
+  
+  .zone-label { 
+    font-size: 10px; 
+    color: var(--text-tertiary); 
+  }
 
-  /* ── SCROLLBAR ──────────────────────────────── */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: var(--bg2); }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+  ::-webkit-scrollbar-thumb { 
+    background: var(--border-medium); 
+    border-radius: 3px; 
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
 
-  /* ── RESPONSIVE ─────────────────────────────── */
+  /* MINI CHARTS */
   .progress-ring {
     transform: rotate(-90deg);
     transform-origin: 50% 50%;
@@ -815,22 +926,23 @@
   .mini-chart {
     display: flex; align-items: flex-end; gap: 2px;
     height: 40px;
+    margin-top: 10px;
   }
 
   .mini-bar {
     flex: 1;
-    background: var(--yellow-dim);
+    background: var(--bg-tertiary);
     border-radius: 2px 2px 0 0;
     min-width: 4px;
     transition: background 0.2s;
   }
 
-  .mini-bar:hover { background: var(--yellow); }
+  .mini-bar:hover { background: var(--accent-1); }
 
-  /* ── MODAL ──────────────────────────────────── */
+  /* MODAL */
   .modal-overlay {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.5);
     backdrop-filter: blur(4px);
     z-index: 200;
     display: none; align-items: center; justify-content: center;
@@ -839,15 +951,17 @@
   .modal-overlay.open { display: flex; }
 
   .modal {
-    background: var(--card);
-    border: 1px solid var(--border2);
-    border-radius: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-medium);
+    border-radius: 12px;
     padding: 28px;
     width: 600px;
     max-width: 90vw;
     max-height: 80vh;
     overflow-y: auto;
     animation: modalIn 0.2s ease;
+    position: relative;
+    box-shadow: var(--shadow-hover);
   }
 
   @keyframes modalIn {
@@ -856,27 +970,30 @@
   }
 
   .modal-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px;
-    font-weight: 800;
-    margin-bottom: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
   }
 
   .modal-close {
     position: absolute;
     right: 20px; top: 20px;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
     border-radius: 6px;
     width: 32px; height: 32px;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    color: var(--text2);
+    color: var(--text-secondary);
     font-size: 16px;
     transition: all 0.15s;
   }
 
-  .modal-close:hover { color: var(--text); border-color: var(--text2); }
+  .modal-close:hover { 
+    color: var(--text-primary); 
+    border-color: var(--border-medium);
+  }
 
   .detail-grid {
     display: grid;
@@ -886,13 +1003,26 @@
   }
 
   .detail-item {
-    background: var(--bg3);
-    border-radius: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
     padding: 12px;
+    border: 1px solid var(--border-light);
   }
 
-  .detail-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); text-transform: uppercase; }
-  .detail-value { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-top: 4px; }
+  .detail-label { 
+    font-size: 10px; 
+    color: var(--text-tertiary); 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  
+  .detail-value { 
+    font-family: 'Inter', sans-serif; 
+    font-size: 16px; 
+    font-weight: 600; 
+    color: var(--text-primary);
+  }
 
   .tooltip {
     position: relative;
@@ -905,19 +1035,20 @@
     bottom: calc(100% + 6px);
     left: 50%;
     transform: translateX(-50%);
-    background: var(--card2);
-    border: 1px solid var(--border2);
+    background: var(--card-bg);
+    border: 1px solid var(--border-medium);
     padding: 6px 10px;
     border-radius: 6px;
     font-size: 11px;
-    color: var(--text);
+    color: var(--text-primary);
     white-space: nowrap;
     z-index: 999;
+    box-shadow: var(--shadow);
   }
 
   .loading-bar {
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--yellow), transparent);
+    background: linear-gradient(90deg, transparent, var(--accent-1), transparent);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 2px;
@@ -929,57 +1060,78 @@
     100% { background-position: 200% 0; }
   }
 
-  .tab-group { display: flex; gap: 4px; margin-bottom: 20px; }
-
-  .tab-btn {
-    padding: 7px 16px;
+  .tab-group { 
+    display: flex; 
+    gap: 4px; 
+    margin-bottom: 20px; 
+    background: var(--bg-tertiary);
+    padding: 4px;
     border-radius: 8px;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text2);
-    font-size: 12.5px;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--border-light);
   }
 
-  .tab-btn.active { background: var(--yellow-dim); border-color: var(--yellow); color: var(--yellow); font-weight: 500; }
-  .tab-btn:hover:not(.active) { color: var(--text); border-color: var(--border); }
+  .tab-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tab-btn.active { 
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: var(--shadow);
+  }
+  
+  .tab-btn:hover:not(.active) { 
+    color: var(--text-primary); 
+  }
 
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
   .divider {
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-light);
     margin: 24px 0;
   }
 
   .notice-banner {
-    background: linear-gradient(135deg, rgba(245,197,24,0.08), rgba(0,229,195,0.05));
-    border: 1px solid rgba(245,197,24,0.2);
-    border-radius: 10px;
-    padding: 14px 18px;
-    display: flex; gap: 12px; align-items: flex-start;
-    margin-bottom: 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    border-left: 4px solid var(--accent-1);
+    box-shadow: var(--shadow);
   }
 
-  .notice-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .notice-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
 
-  .notice-text { font-size: 12.5px; color: var(--text2); line-height: 1.5; }
-
-  .notice-text strong { color: var(--yellow); }
+  .notice-text strong { 
+    color: var(--text-primary); 
+    font-weight: 600;
+  }
 
   /* Borough colors */
-  .boro-manhattan { color: #f5c518; }
-  .boro-brooklyn { color: #00e5c3; }
-  .boro-queens { color: #9b7ff4; }
-  .boro-bronx { color: #ff8c42; }
-  .boro-staten { color: #ff4a6b; }
-  .boro-ewr { color: #22d17a; }
+  .boro-manhattan { color: var(--accent-1); }
+  .boro-brooklyn { color: var(--accent-2); }
+  .boro-queens { color: var(--accent-3); }
+  .boro-bronx { color: var(--accent-4); }
+  .boro-staten { color: var(--accent-5); }
+  .boro-ewr { color: var(--accent-4); }
 </style>
 </head>
-<body>
+<body class="light-mode">
 
 <!-- SIDEBAR -->
 <nav class="sidebar" id="sidebar">
@@ -988,7 +1140,7 @@
       <span class="logo-dot"></span>
       <span class="logo-text">Live Data</span>
     </div>
-    <div class="sidebar-title">NYC TLC<br>Mobility Explorer</div>
+    <div class="sidebar-title">NYC <span class="accent-text"><span>MOBILITY EXPLORER</span></div>
     <div class="sidebar-sub">Yellow Taxi · Jan 2019</div>
   </div>
 
@@ -1036,7 +1188,7 @@
     <div class="data-badge">
       <div class="data-badge-label">Dataset</div>
       <div class="data-badge-value">yellow_tripdata_2019-01</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace;">Source: NYC TLC · PARQUET</div>
+      <div style="font-size:10px;color: #989898;margin-top:4px;">Source: NYC TLC · PARQUET</div>
     </div>
   </div>
 </nav>
@@ -1048,22 +1200,25 @@
   <div class="topbar">
     <div class="topbar-left">
       <div id="page-title" class="page-title">Overview Dashboard</div>
-      <span style="color:var(--border2)">|</span>
+      <span style="color:var(--border-light)">|</span>
       <span id="breadcrumb" class="breadcrumb">January 2019 · 7,667,792 Trips</span>
     </div>
     <div class="topbar-right">
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <span class="theme-option active" id="theme-light">Light</span>
+        <span class="theme-option" id="theme-dark">Dark</span>
+      </div>
       <span class="filter-pill active" id="pill-jan" onclick="selectMonth(this,'Jan')">Jan 2019</span>
       <span class="filter-pill" id="pill-borough" onclick="toggleBorough()">All Boroughs</span>
-      <button class="btn btn-primary" onclick="exportData()">⬇ Export CSV</button>
+      <button class="btn btn-primary" onclick="exportData()">Export CSV</button>
     </div>
   </div>
 
-  <!-- ═══════════════ OVERVIEW PAGE ═════════════ -->
+  <!-- OVERVIEW PAGE -->
   <div class="page active" id="page-overview">
     <div class="loading-bar"></div>
 
     <div class="notice-banner">
-      <span class="notice-icon"></span>
       <div class="notice-text">
         <strong>Dataset:</strong> yellow_tripdata_2019-01.parquet — This dashboard visualizes <strong>7,667,792 yellow taxi trips</strong> recorded in January 2019 by NYC TLC-authorized TPEP technology providers. Zone metadata sourced from <strong>taxi_zone_lookup.csv</strong> (265 zones across 6 boroughs). Data processed per TLC Trip Record User Guide specifications.
       </div>
@@ -1075,63 +1230,63 @@
         <div class="section-sub">January 2019 — New York City Yellow Medallion Taxis</div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-secondary" onclick="refreshKPIs()">↻ Refresh</button>
+        <button class="btn btn-secondary" onclick="refreshKPIs()">Refresh</button>
       </div>
     </div>
 
     <!-- KPIs -->
     <div class="kpi-grid">
-      <div class="kpi-card yellow tooltip" data-tip="Total valid trips after data cleaning">
+      <div class="kpi-card tooltip" data-tip="Total valid trips after data cleaning">
         <div class="kpi-label">Total Trips</div>
         <div class="kpi-value" id="kpi-trips">7,667,792</div>
         <div class="kpi-sub">
           <span class="kpi-trend up">↑ 3.2%</span> vs Dec 2018
         </div>
-        <div class="mini-chart" style="margin-top:10px" id="mc-trips"></div>
+        <div class="mini-chart" id="mc-trips"></div>
       </div>
-      <div class="kpi-card cyan tooltip" data-tip="Total revenue including all fare components">
+      <div class="kpi-card tooltip" data-tip="Total revenue including all fare components">
         <div class="kpi-label">Total Revenue</div>
         <div class="kpi-value" id="kpi-revenue">$115.2M</div>
         <div class="kpi-sub">
           <span class="kpi-trend up">↑ 1.8%</span> MoM growth
         </div>
-        <div class="mini-chart" style="margin-top:10px" id="mc-revenue"></div>
+        <div class="mini-chart" id="mc-revenue"></div>
       </div>
-      <div class="kpi-card green tooltip" data-tip="Average fare amount per trip (excl. tips)">
+      <div class="kpi-card tooltip" data-tip="Average fare amount per trip (excl. tips)">
         <div class="kpi-label">Avg Fare / Trip</div>
         <div class="kpi-value" id="kpi-avgfare">$13.02</div>
         <div class="kpi-sub">
           <span class="kpi-trend down">↓ 0.4%</span> vs Dec 2018
         </div>
-        <div class="mini-chart" style="margin-top:10px" id="mc-fare"></div>
+        <div class="mini-chart" id="mc-fare"></div>
       </div>
-      <div class="kpi-card orange tooltip" data-tip="Mean trip distance in miles">
+      <div class="kpi-card tooltip" data-tip="Mean trip distance in miles">
         <div class="kpi-label">Avg Distance</div>
         <div class="kpi-value" id="kpi-dist">2.87 mi</div>
         <div class="kpi-sub">
           <span class="kpi-trend up">↑ 0.1 mi</span> shift
         </div>
-        <div class="mini-chart" style="margin-top:10px" id="mc-dist"></div>
+        <div class="mini-chart" id="mc-dist"></div>
       </div>
     </div>
 
-    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
-      <div class="kpi-card purple">
+    <div class="kpi-grid">
+      <div class="kpi-card">
         <div class="kpi-label">Avg Tip Rate</div>
         <div class="kpi-value">18.4%</div>
         <div class="kpi-sub">Card payments only</div>
       </div>
-      <div class="kpi-card red">
+      <div class="kpi-card">
         <div class="kpi-label">Avg Trip Duration</div>
         <div class="kpi-value">12.8 min</div>
         <div class="kpi-sub">Median: 10.3 min</div>
       </div>
-      <div class="kpi-card yellow">
+      <div class="kpi-card">
         <div class="kpi-label">Peak Hour</div>
         <div class="kpi-value">6–7 PM</div>
         <div class="kpi-sub">Evening rush dominant</div>
       </div>
-      <div class="kpi-card cyan">
+      <div class="kpi-card">
         <div class="kpi-label">Top Pickup Zone</div>
         <div class="kpi-value" style="font-size:18px">Midtown Ctr</div>
         <div class="kpi-sub">Zone ID 161 · Manhattan</div>
@@ -1147,8 +1302,8 @@
             <div class="chart-sub">Total trips per day across all zones</div>
           </div>
           <div class="chart-legend">
-            <div class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span> Trips</div>
-            <div class="legend-item"><span class="legend-dot" style="background:var(--cyan)"></span> Revenue</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--accent-1)"></span> Trips</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--accent-3)"></span> Revenue</div>
           </div>
         </div>
         <canvas id="chartDailyTrips"></canvas>
@@ -1191,8 +1346,8 @@
       <div class="table-header">
         <div><div class="table-title">Top 15 Pickup Zones by Trip Volume</div></div>
         <div class="table-controls">
-          <button class="btn btn-secondary" onclick="sortZoneTable()">Sort by Trips ↕</button>
-          <button class="btn btn-secondary" onclick="showPage('zones')">View All Zones →</button>
+          <button class="btn btn-secondary" onclick="sortZoneTable()">Sort by Trips</button>
+          <button class="btn btn-secondary" onclick="showPage('zones')">View All Zones</button>
         </div>
       </div>
       <table id="topZonesTable">
@@ -1202,7 +1357,7 @@
             <th onclick="sortTable('topZonesTable',1)">Zone Name</th>
             <th onclick="sortTable('topZonesTable',2)">Borough</th>
             <th onclick="sortTable('topZonesTable',3)">Service Zone</th>
-            <th onclick="sortTable('topZonesTable',4)">Total Trips ↕</th>
+            <th onclick="sortTable('topZonesTable',4)">Total Trips</th>
             <th onclick="sortTable('topZonesTable',5)">Avg Fare</th>
             <th onclick="sortTable('topZonesTable',6)">Avg Distance</th>
             <th>Share %</th>
@@ -1213,7 +1368,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════ TRIPS PAGE ═════════════════ -->
+  <!-- TRIPS PAGE -->
   <div class="page" id="page-trips">
     <div class="section-header">
       <div>
@@ -1224,7 +1379,7 @@
 
     <div class="filter-panel">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">🔍 Filter & Search</span>
+        <span style="font-family:'Inter',sans-serif;font-size:14px;font-weight:600">Filter & Search</span>
         <div style="display:flex;gap:8px">
           <button class="btn btn-secondary" onclick="resetFilters()">Reset Filters</button>
           <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
@@ -1320,11 +1475,11 @@
       <div class="table-header">
         <div>
           <div class="table-title">Trip Records — Sample Dataset</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace" id="trip-count-label">Showing 100 of 7,667,792 trips</div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;" id="trip-count-label">Showing 100 of 7,667,792 trips</div>
         </div>
         <div class="table-controls">
           <input type="text" class="search-input" placeholder="Search zone, borough..." id="trip-search" oninput="liveSearch(this.value)">
-          <button class="btn-icon" onclick="exportTrips()" title="Export">⬇</button>
+          <button class="btn-icon" onclick="exportTrips()" title="Export">↓</button>
         </div>
       </div>
       <table id="tripsTable">
@@ -1355,7 +1510,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════ ZONES PAGE ════════════════ -->
+  <!-- ZONES PAGE -->
   <div class="page" id="page-zones">
     <div class="section-header">
       <div>
@@ -1398,13 +1553,13 @@
     <div class="chart-card" style="margin-bottom:24px">
       <div class="chart-header">
         <div class="chart-title">All 265 NYC Taxi Zones — <span id="zone-visible-count">265</span> shown</div>
-        <div style="font-size:12px;color:var(--text3)">Click any zone card to view detailed analytics</div>
+        <div style="font-size:12px;color:var(--text-tertiary)">Click any zone card to view detailed analytics</div>
       </div>
       <div class="zone-grid" id="zone-grid"></div>
     </div>
   </div>
 
-  <!-- ═══════════════ FARES PAGE ════════════════ -->
+  <!-- FARES PAGE -->
   <div class="page" id="page-fares">
     <div class="section-header">
       <div>
@@ -1413,31 +1568,26 @@
       </div>
     </div>
 
-    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
-      <div class="kpi-card yellow">
+    <div class="kpi-grid">
+      <div class="kpi-card">
         <div class="kpi-label">Total Fare Revenue</div>
         <div class="kpi-value">$99.8M</div>
         <div class="kpi-sub">Base fare collected</div>
       </div>
-      <div class="kpi-card cyan">
+      <div class="kpi-card">
         <div class="kpi-label">Total Tips</div>
         <div class="kpi-value">$17.2M</div>
         <div class="kpi-sub">Credit card tips only</div>
       </div>
-      <div class="kpi-card green">
+      <div class="kpi-card">
         <div class="kpi-label">Total Tolls</div>
         <div class="kpi-value">$3.8M</div>
         <div class="kpi-sub">Bridge & tunnel</div>
       </div>
-      <div class="kpi-card orange">
+      <div class="kpi-card">
         <div class="kpi-label">MTA Surcharge</div>
         <div class="kpi-value">$5.9M</div>
         <div class="kpi-sub">$0.50–$1.00 per trip</div>
-      </div>
-      <div class="kpi-card purple">
-        <div class="kpi-label">Improvement Surcharge</div>
-        <div class="kpi-value">$2.3M</div>
-        <div class="kpi-sub">$0.30 per trip</div>
       </div>
     </div>
 
@@ -1497,7 +1647,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════ TEMPORAL PAGE ════════════════ -->
+  <!-- TEMPORAL PAGE -->
   <div class="page" id="page-temporal">
     <div class="section-header">
       <div>
@@ -1572,7 +1722,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════ PROCESSING PAGE ════════════════ -->
+  <!-- PROCESSING PAGE -->
   <div class="page" id="page-processing">
     <div class="section-header">
       <div>
@@ -1581,23 +1731,23 @@
       </div>
     </div>
 
-    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
-      <div class="kpi-card yellow">
+    <div class="kpi-grid">
+      <div class="kpi-card">
         <div class="kpi-label">Raw Records</div>
         <div class="kpi-value">7,778,101</div>
         <div class="kpi-sub">From parquet file</div>
       </div>
-      <div class="kpi-card red">
+      <div class="kpi-card">
         <div class="kpi-label">Excluded Records</div>
         <div class="kpi-value">110,309</div>
         <div class="kpi-sub">1.42% rejection rate</div>
       </div>
-      <div class="kpi-card green">
+      <div class="kpi-card">
         <div class="kpi-label">Clean Records</div>
         <div class="kpi-value">7,667,792</div>
         <div class="kpi-sub">Passed all validations</div>
       </div>
-      <div class="kpi-card cyan">
+      <div class="kpi-card">
         <div class="kpi-label">Derived Features</div>
         <div class="kpi-value">6</div>
         <div class="kpi-sub">Engineered columns</div>
@@ -1637,83 +1787,22 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td class="highlight">Negative fare amount</td><td>fare_amount</td><td>4,122</td><td>0.053%</td><td>Excluded</td><td><span class="badge badge-red">Critical</span></td></tr>
-          <tr><td class="highlight">Trip distance = 0</td><td>trip_distance</td><td>15,340</td><td>0.197%</td><td>Excluded</td><td><span class="badge badge-red">Critical</span></td></tr>
-          <tr><td class="highlight">Duration &lt; 60 seconds</td><td>tpep_pickup_datetime, dropoff</td><td>8,214</td><td>0.106%</td><td>Excluded</td><td><span class="badge badge-orange">High</span></td></tr>
-          <tr><td class="highlight">Duration &gt; 24 hours</td><td>tpep_pickup_datetime, dropoff</td><td>312</td><td>0.004%</td><td>Excluded</td><td><span class="badge badge-red">Critical</span></td></tr>
-          <tr><td class="highlight">Invalid LocationID (0 or 264+)</td><td>PULocationID, DOLocationID</td><td>22,891</td><td>0.294%</td><td>Excluded</td><td><span class="badge badge-orange">High</span></td></tr>
-          <tr><td class="highlight">Fare &gt; $500 (outlier)</td><td>fare_amount</td><td>1,043</td><td>0.013%</td><td>Excluded</td><td><span class="badge badge-orange">High</span></td></tr>
-          <tr><td class="highlight">passenger_count = 0</td><td>passenger_count</td><td>31,298</td><td>0.402%</td><td>Imputed to 1</td><td><span class="badge badge-yellow">Medium</span></td></tr>
-          <tr><td class="highlight">Tip &gt; 100% of fare</td><td>tip_amount</td><td>2,847</td><td>0.037%</td><td>Capped at fare</td><td><span class="badge badge-yellow">Medium</span></td></tr>
-          <tr><td class="highlight">Duplicate trip records</td><td>All fields</td><td>3,891</td><td>0.050%</td><td>Deduped (keep first)</td><td><span class="badge badge-orange">High</span></td></tr>
-          <tr><td class="highlight">Date outside Jan 2019</td><td>tpep_pickup_datetime</td><td>20,351</td><td>0.262%</td><td>Excluded</td><td><span class="badge badge-red">Critical</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="data-table-wrap">
-      <div class="table-header">
-        <div class="table-title">Derived Feature Engineering</div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Feature Name</th>
-            <th>Formula / Logic</th>
-            <th>Type</th>
-            <th>Business Purpose</th>
-            <th>Range (Jan 2019)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="highlight">trip_duration_min</td>
-            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">(dropoff - pickup).seconds / 60</code></td>
-            <td><span class="badge badge-cyan">Float</span></td>
-            <td>Enables time-efficiency analysis; required for speed calculation</td>
-            <td>1.0 – 90.0 min</td>
-          </tr>
-          <tr>
-            <td class="highlight">speed_mph</td>
-            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">trip_distance / (trip_duration_min / 60)</code></td>
-            <td><span class="badge badge-cyan">Float</span></td>
-            <td>Proxy for traffic congestion; detect unusually fast/slow trips</td>
-            <td>0.5 – 65.0 mph</td>
-          </tr>
-          <tr>
-            <td class="highlight">fare_per_mile</td>
-            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">fare_amount / trip_distance</code></td>
-            <td><span class="badge badge-cyan">Float</span></td>
-            <td>Compares cost efficiency across zones and trip types</td>
-            <td>$1.50 – $28.00/mi</td>
-          </tr>
-          <tr>
-            <td class="highlight">tip_percentage</td>
-            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">tip_amount / fare_amount * 100</code></td>
-            <td><span class="badge badge-cyan">Float</span></td>
-            <td>Analyze tipping behavior by borough, hour, and payment type</td>
-            <td>0% – 100%</td>
-          </tr>
-          <tr>
-            <td class="highlight">pickup_hour</td>
-            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">tpep_pickup_datetime.hour</code></td>
-            <td><span class="badge badge-orange">Integer</span></td>
-            <td>Enable hourly demand analysis and peak identification</td>
-            <td>0 – 23</td>
-          </tr>
-          <tr>
-            <td class="highlight">day_of_week</td>
-            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">tpep_pickup_datetime.weekday() → Mon=0,Sun=6</code></td>
-            <td><span class="badge badge-orange">Integer</span></td>
-            <td>Compare weekday vs. weekend mobility and revenue patterns</td>
-            <td>0 (Mon) – 6 (Sun)</td>
-          </tr>
+          <tr><td class="highlight">Negative fare amount</td><td>fare_amount</td><td>4,122</td><td>0.053%</td><td>Excluded</td><td><span class="badge badge-accent">Critical</span></td></tr>
+          <tr><td class="highlight">Trip distance = 0</td><td>trip_distance</td><td>15,340</td><td>0.197%</td><td>Excluded</td><td><span class="badge badge-accent">Critical</span></td></tr>
+          <tr><td class="highlight">Duration < 60 seconds</td><td>tpep_pickup_datetime, dropoff</td><td>8,214</td><td>0.106%</td><td>Excluded</td><td><span class="badge badge-primary">High</span></td></tr>
+          <tr><td class="highlight">Duration > 24 hours</td><td>tpep_pickup_datetime, dropoff</td><td>312</td><td>0.004%</td><td>Excluded</td><td><span class="badge badge-accent">Critical</span></td></tr>
+          <tr><td class="highlight">Invalid LocationID (0 or 264+)</td><td>PULocationID, DOLocationID</td><td>22,891</td><td>0.294%</td><td>Excluded</td><td><span class="badge badge-primary">High</span></td></tr>
+          <tr><td class="highlight">Fare > $500 (outlier)</td><td>fare_amount</td><td>1,043</td><td>0.013%</td><td>Excluded</td><td><span class="badge badge-primary">High</span></td></tr>
+          <tr><td class="highlight">passenger_count = 0</td><td>passenger_count</td><td>31,298</td><td>0.402%</td><td>Imputed to 1</td><td><span class="badge badge-secondary">Medium</span></td></tr>
+          <tr><td class="highlight">Tip > 100% of fare</td><td>tip_amount</td><td>2,847</td><td>0.037%</td><td>Capped at fare</td><td><span class="badge badge-secondary">Medium</span></td></tr>
+          <tr><td class="highlight">Duplicate trip records</td><td>All fields</td><td>3,891</td><td>0.050%</td><td>Deduped (keep first)</td><td><span class="badge badge-primary">High</span></td></tr>
+          <tr><td class="highlight">Date outside Jan 2019</td><td>tpep_pickup_datetime</td><td>20,351</td><td>0.262%</td><td>Excluded</td><td><span class="badge badge-accent">Critical</span></td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- ═══════════════ ALGORITHM PAGE ════════════════ -->
+  <!-- ALGORITHM PAGE -->
   <div class="page" id="page-algorithm">
     <div class="section-header">
       <div>
@@ -1723,9 +1812,8 @@
     </div>
 
     <div class="notice-banner">
-      <span class="notice-icon">🧮</span>
       <div class="notice-text">
-        <strong>Implementation:</strong> A custom <strong>Max-Heap (Priority Queue)</strong> is used to find the Top-K highest revenue zones without sorting the full dataset. This runs in <strong>O(n log k)</strong> time vs O(n log n) for a full sort, making it significantly faster when k &lt;&lt; n (e.g., top 10 out of 7.7M trips).
+        <strong>Implementation:</strong> A custom <strong>Max-Heap (Priority Queue)</strong> is used to find the Top-K highest revenue zones without sorting the full dataset. This runs in <strong>O(n log k)</strong> time vs O(n log n) for a full sort, making it significantly faster when k << n (e.g., top 10 out of 7.7M trips).
       </div>
     </div>
 
@@ -1734,8 +1822,7 @@
         <div class="chart-card" style="margin-bottom:16px">
           <div class="chart-title" style="margin-bottom:12px">Pseudo-code: Top-K Revenue Zones (Max-Heap)</div>
           <div class="code-block"><span class="code-comment"># Custom Max-Heap — Top-K Zone Revenue
-# No heapq, no sorted(), no sort_values()
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+# No heapq, no sorted(), no sort_values()</span>
 
 <span class="code-keyword">FUNCTION</span> heapify_up(heap, idx):
   parent = (idx - 1) // 2
@@ -1757,7 +1844,7 @@
     heapify_down(heap, size, largest)
 
 <span class="code-keyword">FUNCTION</span> top_k_zones(trip_data, k):
-  zone_revenue = {} <span class="code-comment">  # manual dict aggregation</span>
+  zone_revenue = {}
   <span class="code-keyword">FOR</span> trip in trip_data:
     zone = trip.PULocationID
     <span class="code-keyword">IF</span> zone <span class="code-keyword">NOT IN</span> zone_revenue:
@@ -1783,7 +1870,7 @@
 
         <div class="chart-card">
           <div class="chart-title" style="margin-bottom:12px">Complexity Analysis</div>
-          <table class="complexity-table" style="font-size:12px">
+          <table class="complexity-table" style="font-size:12px; width:100%">
             <thead>
               <tr>
                 <th>Operation</th>
@@ -1792,15 +1879,15 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td>Aggregate zone totals</td><td style="color:var(--green)">O(n)</td><td>O(z)</td></tr>
-              <tr><td>Build max-heap from z zones</td><td style="color:var(--cyan)">O(z log z)</td><td>O(z)</td></tr>
-              <tr><td>Extract top-k from heap</td><td style="color:var(--yellow)">O(k log z)</td><td>O(k)</td></tr>
-              <tr style="font-weight:600"><td><strong>Full algorithm</strong></td><td style="color:var(--yellow)"><strong>O(n + z log z)</strong></td><td><strong>O(z)</strong></td></tr>
-              <tr><td>Naive full sort</td><td style="color:var(--red)">O(n log n)</td><td>O(n)</td></tr>
+              <tr><td>Aggregate zone totals</td><td style="color:var(--accent-5)">O(n)</td><td>O(z)</td></tr>
+              <tr><td>Build max-heap from z zones</td><td style="color:var(--accent-4)">O(z log z)</td><td>O(z)</td></tr>
+              <tr><td>Extract top-k from heap</td><td style="color:var(--accent-1)">O(k log z)</td><td>O(k)</td></tr>
+              <tr style="font-weight:600"><td><strong>Full algorithm</strong></td><td style="color:var(--accent-1)"><strong>O(n + z log z)</strong></td><td><strong>O(z)</strong></td></tr>
+              <tr><td>Naive full sort</td><td style="color:var(--accent-4)">O(n log n)</td><td>O(n)</td></tr>
             </tbody>
           </table>
-          <div style="margin-top:12px;padding:12px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text2)">
-            Where <strong style="color:var(--yellow)">n</strong> = 7,667,792 trips, <strong style="color:var(--cyan)">z</strong> = 265 zones, <strong style="color:var(--green)">k</strong> = top-k query (e.g. 10). The heap approach is <strong style="color:var(--green)">~28,000×</strong> faster on this dataset for typical k values.
+          <div style="margin-top:12px;padding:12px;background:var(--bg-tertiary);border-radius:8px;font-size:12px;color:var(--text-secondary)">
+            Where <strong style="color:var(--accent-1)">n</strong> = 7,667,792 trips, <strong style="color:var(--accent-4)">z</strong> = 265 zones, <strong style="color:var(--accent-5)">k</strong> = top-k query (e.g. 10). The heap approach is <strong style="color:var(--accent-5)">~28,000×</strong> faster on this dataset for typical k values.
           </div>
         </div>
       </div>
@@ -1810,29 +1897,29 @@
           <div class="chart-title" style="margin-bottom:12px">Live Demo: Top-K Zone Revenue</div>
           <div style="display:flex;gap:10px;margin-bottom:16px;align-items:flex-end">
             <div>
-              <label style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);display:block;margin-bottom:4px">K VALUE</label>
-              <input type="range" min="1" max="30" value="10" id="kSlider" oninput="updateK(this.value)" style="width:150px;accent-color:var(--yellow)">
-              <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--yellow);margin-left:8px" id="kValue">k = 10</span>
+              <label style="font-size:10px;color:var(--text-tertiary);display:block;margin-bottom:4px">K VALUE</label>
+              <input type="range" min="1" max="30" value="10" id="kSlider" oninput="updateK(this.value)" style="width:150px">
+              <span style="font-size:13px;color:var(--accent-1);margin-left:8px" id="kValue">k = 10</span>
             </div>
-            <button class="btn btn-primary" onclick="runHeapDemo()">▶ Run Heap Algorithm</button>
+            <button class="btn btn-primary" onclick="runHeapDemo()">Run Heap Algorithm</button>
           </div>
           <canvas id="chartHeapResult" style="max-height:260px"></canvas>
         </div>
 
         <div class="chart-card">
           <div class="chart-title" style="margin-bottom:12px">Algorithm Trace — Step Visualization</div>
-          <div id="algoTrace" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);line-height:2;max-height:200px;overflow-y:auto"></div>
+          <div id="algoTrace" style="font-size:11px;color:var(--text-secondary);line-height:2;max-height:200px;overflow-y:auto;background:var(--bg-tertiary);padding:12px;border-radius:6px;"></div>
           <div style="display:flex;gap:8px;margin-top:12px">
-            <button class="btn btn-secondary" onclick="stepAlgo()" id="stepBtn">Step →</button>
+            <button class="btn btn-secondary" onclick="stepAlgo()" id="stepBtn">Step</button>
             <button class="btn btn-secondary" onclick="resetAlgo()">Reset</button>
-            <span style="font-size:11px;color:var(--text3);margin-left:4px;align-self:center" id="stepInfo">Step 0 / 265</span>
+            <span style="font-size:11px;color:var(--text-tertiary);margin-left:4px;align-self:center" id="stepInfo">Step 0 / 265</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════ SCHEMA PAGE ════════════════ -->
+  <!-- SCHEMA PAGE -->
   <div class="page" id="page-schema">
     <div class="section-header">
       <div>
@@ -1842,17 +1929,16 @@
     </div>
 
     <div class="notice-banner">
-      <span class="notice-icon">🗄️</span>
       <div class="notice-text">
-        <strong>Schema Design:</strong> Third Normal Form (3NF). Four primary tables with foreign key relationships. Fact table <code style="color:var(--cyan)">trips</code> references dimension tables <code style="color:var(--cyan)">taxi_zones</code>, <code style="color:var(--cyan)">rate_codes</code>, and <code style="color:var(--cyan)">payment_types</code>. Indexes on high-cardinality FK columns and timestamp fields for query performance.
+        <strong>Schema Design:</strong> Third Normal Form (3NF). Four primary tables with foreign key relationships. Fact table <code style="color:var(--accent-4)">trips</code> references dimension tables <code style="color:var(--accent-4)">taxi_zones</code>, <code style="color:var(--accent-4)">rate_codes</code>, and <code style="color:var(--accent-4)">payment_types</code>. Indexes on high-cardinality FK columns and timestamp fields for query performance.
       </div>
     </div>
 
     <div class="chart-grid">
       <div class="chart-card wide">
         <div class="chart-title" style="margin-bottom:16px">Entity-Relationship Diagram</div>
-        <div style="background:var(--bg);border-radius:10px;padding:24px;overflow-x:auto">
-          <svg viewBox="0 0 900 400" style="width:100%;min-width:600px;font-family:'DM Mono',monospace" id="erDiagram"></svg>
+        <div style="background:var(--bg-tertiary);border-radius:8px;padding:24px;overflow-x:auto">
+          <svg viewBox="0 0 900 400" style="width:100%;min-width:600px;" id="erDiagram"></svg>
         </div>
       </div>
     </div>
@@ -1885,7 +1971,7 @@
   tip_percentage       DECIMAL(6,2),
   pickup_hour          SMALLINT,
   day_of_week          SMALLINT
-);</span></div>
+);</div>
       </div>
       <div class="chart-card">
         <div class="chart-title" style="margin-bottom:12px">Dimension Tables + Indexes</div>
@@ -1921,7 +2007,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════ INSIGHTS PAGE ════════════════ -->
+  <!-- INSIGHTS PAGE -->
   <div class="page" id="page-insights">
     <div class="section-header">
       <div>
@@ -1932,21 +2018,18 @@
 
     <div class="insight-grid">
       <div class="insight-card" data-num="01">
-        <div class="insight-icon">🏙️</div>
-        <div class="insight-title">Manhattan Dominance & the "Yellow Zone Effect"</div>
+        <div class="insight-title">Manhattan Dominance & the Yellow Zone Effect</div>
         <div class="insight-body">
           Manhattan's Yellow Zones account for <span class="insight-highlight">72.3% of all trips</span> despite representing only 28% of total zone area. Midtown Center (Zone 161), Midtown East (162), and Upper East Side South (237) alone generate <span class="insight-highlight">over 19% of total revenue</span>. The concentration decreases sharply at borough boundaries — a trip starting in Queens has a <span class="insight-highlight">73% probability of ending in Manhattan</span>, confirming the borough as NYC's mobility hub.
         </div>
       </div>
       <div class="insight-card" data-num="02">
-        <div class="insight-icon">⏰</div>
         <div class="insight-title">Double-Peaked Demand: Rush Hour Asymmetry</div>
         <div class="insight-body">
           Trip volume peaks twice daily: 8–9 AM (<span class="insight-highlight">~312K trips/hour</span>) and 6–7 PM (<span class="insight-highlight">~358K trips/hour</span>). The evening peak is 14.7% larger than the morning peak — likely because workers use subway in the morning (cheaper) but taxis for evening return trips when tired or carrying goods. Late-night (1–4 AM) Friday–Saturday shows a <span class="insight-highlight">secondary surge of 28%</span> above weeknight baseline.
         </div>
       </div>
       <div class="insight-card" data-num="03">
-        <div class="insight-icon">💳</div>
         <div class="insight-title">Airport Trips: High Fare, Low Tip Rate Paradox</div>
         <div class="insight-body">
           JFK Airport (Zone 132) trips average <span class="insight-highlight">$52.80 in fare</span> — 4× the city average — yet show a tip rate of only <span class="insight-highlight">14.2% vs 18.4% citywide</span>. LaGuardia (Zone 138) trips show 16.1%. Analysis of rate codes shows that <span class="insight-highlight">Rate Code 2 (JFK flat rate)</span> correlates with 22% lower tip probability, suggesting passengers perceive fixed-rate fares differently. Credit card payments at airports are 89% of transactions.
@@ -1986,14 +2069,14 @@
     </div>
   </div>
 
-  <!-- ═══════════════ REPORT PAGE ════════════════ -->
+  <!-- REPORT PAGE -->
   <div class="page" id="page-report">
     <div class="section-header">
       <div>
         <div class="section-title">Technical Report</div>
         <div class="section-sub">Documentation, architecture decisions & reflection</div>
       </div>
-      <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Export PDF</button>
+      <button class="btn btn-primary" onclick="window.print()">Print / Export PDF</button>
     </div>
 
     <div class="tab-group">
@@ -2005,11 +2088,11 @@
     <div class="tab-content active" id="report-problem">
       <div class="chart-card">
         <div class="chart-title" style="margin-bottom:16px">1. Problem Framing and Dataset Analysis</div>
-        <div style="font-size:13.5px;color:var(--text2);line-height:1.8">
-          <p style="margin-bottom:12px"><strong style="color:var(--text)">Dataset Context:</strong> The NYC TLC Yellow Taxi dataset for January 2019 contains 7,667,792 cleaned trip records collected via TPEP technology providers (Verifone, CMT). Each record captures pickup/dropoff timestamps, zone IDs (referencing taxi_zone_lookup.csv), trip distance, fare components, passenger count, and payment information.</p>
-          <p style="margin-bottom:12px"><strong style="color:var(--text)">Data Challenges Identified:</strong> The raw data contained 110,309 records requiring exclusion or imputation. Key challenges included: (1) negative fare amounts caused by reversal transactions, (2) zero-distance trips indicating metered waits or data errors, (3) location IDs outside the valid 1–263 range per the zone lookup table, (4) temporal outliers where pickup date fell outside January 2019, and (5) implausibly fast trips (>100 mph derived speed). A subset of 31,298 trips had passenger_count=0, which were imputed to 1 since zero passengers is physically impossible for a completed fare.</p>
-          <p style="margin-bottom:12px"><strong style="color:var(--text)">Key Assumption:</strong> Trips with store_and_fwd_flag='Y' (stored when no cellular connection) were retained as valid — the flag affects transmission timing, not trip legitimacy.</p>
-          <p style="margin-bottom:0"><strong style="color:var(--yellow)">Unexpected Observation:</strong> January 1st (New Year's Day) showed a 41% drop in morning trips vs. the month average, but a 62% spike in late-night trips on January 1st (0–4 AM) corresponding to post-midnight New Year's celebrations. This asymmetric temporal signature influenced the design decision to expose granular hourly filtering in the dashboard.</p>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+          <p style="margin-bottom:12px"><strong style="color:var(--text-primary)">Dataset Context:</strong> The NYC TLC Yellow Taxi dataset for January 2019 contains 7,667,792 cleaned trip records collected via TPEP technology providers (Verifone, CMT). Each record captures pickup/dropoff timestamps, zone IDs (referencing taxi_zone_lookup.csv), trip distance, fare components, passenger count, and payment information.</p>
+          <p style="margin-bottom:12px"><strong style="color:var(--text-primary)">Data Challenges Identified:</strong> The raw data contained 110,309 records requiring exclusion or imputation. Key challenges included: (1) negative fare amounts caused by reversal transactions, (2) zero-distance trips indicating metered waits or data errors, (3) location IDs outside the valid 1–263 range per the zone lookup table, (4) temporal outliers where pickup date fell outside January 2019, and (5) implausibly fast trips (>100 mph derived speed). A subset of 31,298 trips had passenger_count=0, which were imputed to 1 since zero passengers is physically impossible for a completed fare.</p>
+          <p style="margin-bottom:12px"><strong style="color:var(--text-primary)">Key Assumption:</strong> Trips with store_and_fwd_flag='Y' (stored when no cellular connection) were retained as valid — the flag affects transmission timing, not trip legitimacy.</p>
+          <p style="margin-bottom:0"><strong style="color:var(--accent-1)">Unexpected Observation:</strong> January 1st (New Year's Day) showed a 41% drop in morning trips vs. the month average, but a 62% spike in late-night trips on January 1st (0–4 AM) corresponding to post-midnight New Year's celebrations. This asymmetric temporal signature influenced the design decision to expose granular hourly filtering in the dashboard.</p>
         </div>
       </div>
     </div>
@@ -2017,12 +2100,12 @@
     <div class="tab-content" id="report-architecture">
       <div class="chart-card" style="margin-bottom:20px">
         <div class="chart-title" style="margin-bottom:16px">2. System Architecture</div>
-        <div style="background:var(--bg);border-radius:10px;padding:20px;margin-bottom:16px">
+        <div style="background:var(--bg-tertiary);border-radius:8px;padding:20px;margin-bottom:16px">
           <svg viewBox="0 0 800 240" style="width:100%" id="archDiagram"></svg>
         </div>
-        <div style="font-size:13.5px;color:var(--text2);line-height:1.8">
-          <p style="margin-bottom:12px"><strong style="color:var(--text)">Stack Choices:</strong> Backend in Python/Flask for its strong pandas/pyarrow parquet ecosystem. PostgreSQL selected over SQLite for production-grade indexing and concurrent query support. Frontend in vanilla HTML/CSS/JS with Chart.js — avoiding React overhead for a dataset-centric analytical dashboard where server-rendered API responses are preferred.</p>
-          <p style="margin-bottom:0"><strong style="color:var(--text)">Trade-offs:</strong> A columnar database (DuckDB) would offer better analytical query performance but sacrifices the normalized relational schema required by the assignment. The flat parquet file is ingested once at startup and cached in-memory for dashboard responsiveness, trading memory (~800MB) for query speed.</p>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+          <p style="margin-bottom:12px"><strong style="color:var(--text-primary)">Stack Choices:</strong> Backend in Python/Flask for its strong pandas/pyarrow parquet ecosystem. PostgreSQL selected over SQLite for production-grade indexing and concurrent query support. Frontend in vanilla HTML/CSS/JS with Chart.js — avoiding React overhead for a dataset-centric analytical dashboard where server-rendered API responses are preferred.</p>
+          <p style="margin-bottom:0"><strong style="color:var(--text-primary)">Trade-offs:</strong> A columnar database (DuckDB) would offer better analytical query performance but sacrifices the normalized relational schema required by the assignment. The flat parquet file is ingested once at startup and cached in-memory for dashboard responsiveness, trading memory (~800MB) for query speed.</p>
         </div>
       </div>
     </div>
@@ -2030,10 +2113,10 @@
     <div class="tab-content" id="report-reflection">
       <div class="chart-card">
         <div class="chart-title" style="margin-bottom:16px">5. Reflection and Future Work</div>
-        <div style="font-size:13.5px;color:var(--text2);line-height:1.8">
-          <p style="margin-bottom:12px"><strong style="color:var(--text)">Technical Challenges:</strong> The primary technical challenge was the parquet ingestion pipeline — the 7.7M row file required chunked processing to avoid memory overflow. Pandas read_parquet with chunked iteration was replaced with pyarrow.dataset streaming for 4× memory efficiency. Zone join performance improved 12× after adding a dictionary index on LocationID at ingestion time rather than performing per-row CSV lookups.</p>
-          <p style="margin-bottom:12px"><strong style="color:var(--text)">Team Challenges:</strong> Coordinating schema design decisions required two full revision cycles. Initial designs had denormalized zone names into the trips table — this was refactored to FK references after realizing 265 zone names × 7.7M rows created 450MB of redundant string data.</p>
-          <p style="margin-bottom:0"><strong style="color:var(--yellow)">Future Work:</strong> (1) Integrate 12 months of data to detect seasonal patterns. (2) Add real-time streaming ingestion via Kafka for live fleet monitoring. (3) Implement spatial clustering (DBSCAN) on pickup coordinates to identify organic demand hotspots without relying on predefined zone boundaries. (4) Build a driver earnings estimator incorporating fuel costs and medallion fees for full economic analysis. (5) Deploy on GCP Cloud Run with PostGIS for true geospatial queries.</p>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+          <p style="margin-bottom:12px"><strong style="color:var(--text-primary)">Technical Challenges:</strong> The primary technical challenge was the parquet ingestion pipeline — the 7.7M row file required chunked processing to avoid memory overflow. Pandas read_parquet with chunked iteration was replaced with pyarrow.dataset streaming for 4× memory efficiency. Zone join performance improved 12× after adding a dictionary index on LocationID at ingestion time rather than performing per-row CSV lookups.</p>
+          <p style="margin-bottom:12px"><strong style="color:var(--text-primary)">Team Challenges:</strong> Coordinating schema design decisions required two full revision cycles. Initial designs had denormalized zone names into the trips table — this was refactored to FK references after realizing 265 zone names × 7.7M rows created 450MB of redundant string data.</p>
+          <p style="margin-bottom:0"><strong style="color:var(--accent-1)">Future Work:</strong> (1) Integrate 12 months of data to detect seasonal patterns. (2) Add real-time streaming ingestion via Kafka for live fleet monitoring. (3) Implement spatial clustering (DBSCAN) on pickup coordinates to identify organic demand hotspots without relying on predefined zone boundaries. (4) Build a driver earnings estimator incorporating fuel costs and medallion fees for full economic analysis. (5) Deploy on GCP Cloud Run with PostGIS for true geospatial queries.</p>
         </div>
       </div>
     </div>
@@ -2046,9 +2129,9 @@
   <div class="modal" style="position:relative">
     <button class="modal-close" onclick="closeModal('tripModal')">✕</button>
     <div class="modal-title" id="modal-trip-title">Trip #4,821,037</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:4px">January 15, 2019 · Rate: Standard</div>
+    <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px">January 15, 2019 · Rate: Standard</div>
     <div class="detail-grid" id="modal-trip-detail"></div>
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-light)">
       <div class="chart-title" style="margin-bottom:8px;font-size:13px">Fare Breakdown</div>
       <canvas id="modalFareChart" style="max-height:120px"></canvas>
     </div>
@@ -2061,7 +2144,7 @@
     <button class="modal-close" onclick="closeModal('zoneModal')">✕</button>
     <div class="modal-title" id="modal-zone-title">Zone Detail</div>
     <div class="detail-grid" id="modal-zone-detail"></div>
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-light)">
       <div class="chart-title" style="margin-bottom:8px;font-size:13px">Zone Trip Volume by Hour</div>
       <canvas id="modalZoneChart" style="max-height:140px"></canvas>
     </div>
@@ -2069,6 +2152,34 @@
 </div>
 
 <script>
+// Theme toggle functionality
+function toggleTheme() {
+  const body = document.body;
+  const lightOption = document.getElementById('theme-light');
+  const darkOption = document.getElementById('theme-dark');
+  
+  if (body.classList.contains('light-mode')) {
+    body.classList.remove('light-mode');
+    body.classList.add('dark-mode');
+    lightOption.classList.remove('active');
+    darkOption.classList.add('active');
+  } else {
+    body.classList.remove('dark-mode');
+    body.classList.add('light-mode');
+    darkOption.classList.remove('active');
+    lightOption.classList.add('active');
+  }
+  
+  // Redraw charts to update colors
+  if (window.location.hash.includes('overview')) {
+    renderOverviewCharts();
+  }
+}
+
+// The rest of the JavaScript code remains exactly the same as in the original
+// I'll preserve all the existing functionality - the ZONES array, genTrips, etc.
+// For brevity, I'm not repeating all 1000+ lines of JS here, but they remain unchanged
+
 // ═══════════════════════════════════════════════
 //   DATA — Real zone data from taxi_zone_lookup.csv
 // ═══════════════════════════════════════════════
@@ -2422,7 +2533,7 @@ let currentPage = 1;
 const TRIPS_PER_PAGE = 20;
 let sortField = null, sortDir = 1;
 
-// ═════════════ NAVIGATION ═════════════
+// NAVIGATION
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -2444,17 +2555,17 @@ function showPage(name) {
   return false;
 }
 
-// ═════════════ MINI CHARTS (OVERVIEW) ═════════════
+// MINI CHARTS (OVERVIEW)
 function buildMiniCharts() {
   ['mc-trips','mc-revenue','mc-fare','mc-dist'].forEach((id,i)=>{
     const el = document.getElementById(id);
     if(!el) return;
     const heights = Array.from({length:14},()=>20+Math.random()*80);
-    el.innerHTML = heights.map((h,j)=>`<div class="mini-bar" style="height:${h}%;background:${j===13?'var(--yellow)':'var(--yellow-dim)'}"></div>`).join('');
+    el.innerHTML = heights.map((h,j)=>`<div class="mini-bar" style="height:${h}%;background:${j===13?'var(--accent-1)':'var(--bg-tertiary)'}"></div>`).join('');
   });
 }
 
-// ═════════════ TOP ZONES TABLE ═════════════
+// TOP ZONES TABLE
 const TOP_ZONES = [
   {rank:1,id:161,name:"Midtown Center",borough:"Manhattan",service:"Yellow Zone",trips:285000,fare:14.20,dist:1.82,share:3.72},
   {rank:2,id:162,name:"Midtown East",borough:"Manhattan",service:"Yellow Zone",trips:258000,fare:13.85,dist:1.78,share:3.37},
@@ -2475,56 +2586,53 @@ const TOP_ZONES = [
 
 function renderTopZonesTable() {
   const tbody = document.getElementById('topZonesTbody');
-  const boroColors = {Manhattan:'badge-yellow',Brooklyn:'badge-cyan',Queens:'badge-purple',Bronx:'badge-orange','Staten Island':'badge-red',Airports:'badge-green',EWR:'badge-gray'};
   tbody.innerHTML = TOP_ZONES.map(z=>`
     <tr onclick="showZoneModal(${z.id})" style="cursor:pointer">
-      <td><span style="font-family:'DM Mono',monospace;color:var(--text3)">#${z.rank}</span></td>
+      <td><span style="color:var(--text-tertiary)">#${z.rank}</span></td>
       <td class="highlight">${z.name}</td>
-      <td><span class="badge ${boroColors[z.borough]||'badge-gray'}">${z.borough}</span></td>
-      <td><span class="badge badge-gray">${z.service}</span></td>
+      <td><span class="badge badge-primary">${z.borough}</span></td>
+      <td><span class="badge badge-secondary">${z.service}</span></td>
       <td class="highlight">${z.trips.toLocaleString()}</td>
-      <td style="color:var(--green)">$${z.fare.toFixed(2)}</td>
+      <td style="color:var(--accent-5)">$${z.fare.toFixed(2)}</td>
       <td>${z.dist.toFixed(2)} mi</td>
       <td>
         <div style="display:flex;align-items:center;gap:6px">
-          <div style="flex:1;background:var(--bg3);height:4px;border-radius:2px;overflow:hidden">
-            <div style="height:100%;background:var(--yellow);width:${z.share/4*100}%;border-radius:2px"></div>
+          <div style="flex:1;background:var(--bg-tertiary);height:4px;border-radius:2px;overflow:hidden">
+            <div style="height:100%;background:var(--accent-1);width:${z.share/4*100}%;border-radius:2px"></div>
           </div>
-          <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">${z.share}%</span>
+          <span style="font-size:10px;color:var(--text-tertiary)">${z.share}%</span>
         </div>
       </td>
     </tr>
   `).join('');
 }
 
-// ═════════════ TRIPS TABLE ═════════════
+// TRIPS TABLE
 function renderTripsTable() {
   const tbody = document.getElementById('tripsTbody');
   const start = (currentPage-1)*TRIPS_PER_PAGE;
   const pageTrips = filteredTrips.slice(start, start+TRIPS_PER_PAGE);
-  const payColors = {'Credit Card':'badge-cyan','Cash':'badge-yellow','No Charge':'badge-gray','Dispute':'badge-red'};
-  const rateColors = {'Standard':'badge-gray','JFK':'badge-green','Newark':'badge-orange','Nassau/West':'badge-purple','Negotiated':'badge-yellow','Group Ride':'badge-cyan'};
   tbody.innerHTML = pageTrips.map(t=>`
     <tr>
-      <td><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${t.id.toLocaleString()}</span></td>
+      <td><span style="font-size:11px;color:var(--text-tertiary)">${t.id.toLocaleString()}</span></td>
       <td>${t.pickup}</td>
       <td>${t.dropoff}</td>
-      <td style="color:var(--text2)">${t.duration} min</td>
+      <td style="color:var(--text-secondary)">${t.duration} min</td>
       <td>
         <div class="highlight" style="font-size:12px">${t.puName}</div>
-        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${t.puBorough}</div>
+        <div style="font-size:10px;color:var(--text-tertiary)">${t.puBorough}</div>
       </td>
       <td>
         <div class="highlight" style="font-size:12px">${t.doName}</div>
-        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${t.doBorough}</div>
+        <div style="font-size:10px;color:var(--text-tertiary)">${t.doBorough}</div>
       </td>
       <td style="text-align:center">${t.passengers}</td>
       <td>${t.distance} mi</td>
-      <td style="color:var(--yellow)">$${t.fare.toFixed(2)}</td>
-      <td style="color:var(--green)">$${t.tip.toFixed(2)}</td>
+      <td style="color:var(--accent-1)">$${t.fare.toFixed(2)}</td>
+      <td style="color:var(--accent-5)">$${t.tip.toFixed(2)}</td>
       <td class="highlight">$${t.total.toFixed(2)}</td>
-      <td><span class="badge ${payColors[t.payment]||'badge-gray'}">${t.payment}</span></td>
-      <td><span class="badge ${rateColors[t.rateCode]||'badge-gray'}">${t.rateCode}</span></td>
+      <td><span class="badge badge-primary">${t.payment}</span></td>
+      <td><span class="badge badge-secondary">${t.rateCode}</span></td>
       <td><button class="btn btn-secondary" style="padding:4px 8px;font-size:11px" onclick="showTripModal(${allTrips.indexOf(t)})">Details</button></td>
     </tr>
   `).join('');
@@ -2582,7 +2690,6 @@ function applyFilters() {
     }
     return true;
   });
-  // Sort
   const sortVal = document.getElementById('f-sort').value;
   const sortMap = {fare_desc:(a,b)=>b.fare-a.fare, fare_asc:(a,b)=>a.fare-b.fare, dist_desc:(a,b)=>b.distance-a.distance, dist_asc:(a,b)=>a.distance-b.distance, tip_desc:(a,b)=>b.tip-a.tip, duration_desc:(a,b)=>b.duration-a.duration};
   if(sortMap[sortVal]) filteredTrips.sort(sortMap[sortVal]);
@@ -2610,7 +2717,7 @@ function liveSearch(val) {
   renderTripsTable();
 }
 
-// ═════════════ ZONES PAGE ═════════════
+// ZONES PAGE
 function renderZones() {
   renderBoroughBars();
   renderServiceBars();
@@ -2623,11 +2730,10 @@ function renderBoroughBars() {
   ZONES.forEach(z=>{ counts[z.borough]=(counts[z.borough]||0)+1; });
   const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   const max = sorted[0][1];
-  const colors = {Manhattan:'var(--yellow)',Brooklyn:'var(--cyan)',Queens:'var(--purple)',Bronx:'var(--orange)','Staten Island':'var(--red)',EWR:'var(--green)','Unknown':'var(--text3)','N/A':'var(--text3)'};
   document.getElementById('borough-zone-bars').innerHTML = sorted.map(([b,c])=>`
     <div class="bar-item">
       <div class="bar-label">${b}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${c/max*100}%;background:${colors[b]||'var(--text2)'}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${c/max*100}%"></div></div>
       <div class="bar-value">${c} zones</div>
     </div>`).join('');
 }
@@ -2637,23 +2743,21 @@ function renderServiceBars() {
   ZONES.forEach(z=>{ counts[z.service]=(counts[z.service]||0)+1; });
   const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   const max = sorted[0][1];
-  const colors = {'Yellow Zone':'var(--yellow)','Boro Zone':'var(--cyan)','Airports':'var(--green)','EWR':'var(--orange)','N/A':'var(--text3)'};
   document.getElementById('service-zone-bars').innerHTML = sorted.map(([s,c])=>`
     <div class="bar-item">
       <div class="bar-label">${s}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${c/max*100}%;background:${colors[s]||'var(--text2)'}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${c/max*100}%"></div></div>
       <div class="bar-value">${c}</div>
     </div>`).join('');
 }
 
 function renderZoneGrid(zones) {
-  const boroColors = {Manhattan:'boro-manhattan',Brooklyn:'boro-brooklyn',Queens:'boro-queens',Bronx:'boro-bronx','Staten Island':'boro-staten',EWR:'boro-ewr'};
   document.getElementById('zone-visible-count').textContent = zones.length;
   document.getElementById('zone-grid').innerHTML = zones.map(z=>{
     const trips = zoneTrips(z.id);
     return `<div class="zone-card" onclick="showZoneModal(${z.id})">
       <div class="zone-name">${z.zone}</div>
-      <div class="zone-borough ${boroColors[z.borough]||''}">${z.borough} · Zone ${z.id}</div>
+      <div class="zone-borough">${z.borough} · Zone ${z.id}</div>
       <div class="zone-trips">${trips>=1000?(trips/1000).toFixed(1)+'K':trips}</div>
       <div class="zone-label">est. trips · Jan 2019</div>
     </div>`;
@@ -2677,14 +2781,19 @@ function renderZoneActivityChart() {
   if(!ctx) return;
   new Chart(ctx, {
     type:'bar',
-    data:{labels:boroughs,datasets:[{data:counts,backgroundColor:['rgba(245,197,24,0.7)','rgba(155,127,244,0.7)','rgba(0,229,195,0.7)','rgba(255,140,66,0.7)','rgba(255,74,107,0.7)'],borderRadius:4}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'K':v},grid:{color:'rgba(255,255,255,0.05)'}}}}
+    data:{labels:boroughs,datasets:[{data:counts,backgroundColor:[
+      'rgba(51,51,51,0.7)',
+      'rgba(75,75,75,0.7)',
+      'rgba(47,79,79,0.7)',
+      'rgba(92,81,71,0.7)',
+      'rgba(47,79,47,0.7)'
+    ],borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'K':v},grid:{color:'rgba(0,0,0,0.03)'}}}}
   });
 }
 
-// ═════════════ OVERVIEW CHARTS ═════════════
+// OVERVIEW CHARTS
 function renderOverviewCharts() {
-  // Daily trips
   const days = Array.from({length:31},(_,i)=>i+1);
   const dailyTrips = days.map(d=>{
     const base = 240000;
@@ -2700,29 +2809,34 @@ function renderOverviewCharts() {
     data:{
       labels:days.map(d=>`Jan ${d}`),
       datasets:[
-        {type:'bar',label:'Trips',data:dailyTrips,backgroundColor:'rgba(245,197,24,0.3)',borderColor:'rgba(245,197,24,0.7)',borderWidth:1,yAxisID:'y'},
-        {type:'line',label:'Revenue ($K)',data:dailyRev,borderColor:'var(--cyan)',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.4,yAxisID:'y2'}
+        {type:'bar',label:'Trips',data:dailyTrips,backgroundColor:'rgba(51,51,51,0.3)',borderColor:'rgba(51,51,51,0.7)',borderWidth:1,yAxisID:'y'},
+        {type:'line',label:'Revenue ($K)',data:dailyRev,borderColor:'var(--accent-3)',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.4,yAxisID:'y2'}
       ]
     },
-    options:{responsive:true,interaction:{mode:'index'},plugins:{legend:{labels:{color:'#8a97aa',font:{size:11}}}},scales:{
-      x:{ticks:{color:'#5a6677',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},
-      y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}},
-      y2:{position:'right',ticks:{color:'var(--cyan)',font:{size:10},callback:v=>'$'+v+'K'},grid:{display:false}}
+    options:{responsive:true,interaction:{mode:'index'},plugins:{legend:{labels:{color:'var(--text-secondary)',font:{size:11}}}},scales:{
+      x:{ticks:{color:'var(--text-tertiary)',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},
+      y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(0,0,0,0.03)'}},
+      y2:{position:'right',ticks:{color:'var(--accent-3)',font:{size:10},callback:v=>'$'+v+'K'},grid:{display:false}}
     }}
   });
 
-  // Borough dist
   const ctx2 = document.getElementById('chartBoroughDist');
   if(ctx2) new Chart(ctx2, {
     type:'doughnut',
     data:{
       labels:['Manhattan','Queens','Brooklyn','Bronx','Staten Island','EWR'],
-      datasets:[{data:[5544000,1019000,745000,230000,58000,72000],backgroundColor:['rgba(245,197,24,0.8)','rgba(155,127,244,0.8)','rgba(0,229,195,0.8)','rgba(255,140,66,0.8)','rgba(255,74,107,0.8)','rgba(34,209,122,0.8)'],borderColor:'var(--card)',borderWidth:3}]
+      datasets:[{data:[5544000,1019000,745000,230000,58000,72000],backgroundColor:[
+        'rgba(51,51,51,0.8)',
+        'rgba(75,75,75,0.8)',
+        'rgba(47,79,79,0.8)',
+        'rgba(92,81,71,0.8)',
+        'rgba(47,79,47,0.8)',
+        'rgba(75,75,75,0.5)'
+      ],borderColor:'var(--card-bg)',borderWidth:3}]
     },
-    options:{responsive:true,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'#8a97aa',font:{size:11},padding:12}}}}
+    options:{responsive:true,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'var(--text-secondary)',font:{size:11},padding:12}}}}
   });
 
-  // Hourly
   const hours = Array.from({length:24},(_,i)=>i);
   const weekdayTrips = [8200,4100,2800,2200,2400,5600,14200,24800,29400,22100,18900,21300,23800,22500,21200,23100,27800,34200,31400,27900,24100,20800,17200,13400];
   const weekendTrips = [14800,11200,8400,6800,5600,4800,5400,8200,12100,16800,20400,23400,24800,25200,24600,23800,23200,24400,25800,25400,24200,23600,22000,19800];
@@ -2732,46 +2846,51 @@ function renderOverviewCharts() {
     data:{
       labels:hours.map(h=>`${h}:00`),
       datasets:[
-        {label:'Weekday',data:weekdayTrips,borderColor:'var(--yellow)',backgroundColor:'rgba(245,197,24,0.06)',fill:true,tension:0.4,borderWidth:2,pointRadius:0},
-        {label:'Weekend',data:weekendTrips,borderColor:'var(--cyan)',backgroundColor:'rgba(0,229,195,0.06)',fill:true,tension:0.4,borderWidth:2,pointRadius:0}
+        {label:'Weekday',data:weekdayTrips,borderColor:'var(--accent-1)',backgroundColor:'rgba(51,51,51,0.06)',fill:true,tension:0.4,borderWidth:2,pointRadius:0},
+        {label:'Weekend',data:weekendTrips,borderColor:'var(--accent-3)',backgroundColor:'rgba(47,79,79,0.06)',fill:true,tension:0.4,borderWidth:2,pointRadius:0}
       ]
     },
-    options:{responsive:true,plugins:{legend:{labels:{color:'#8a97aa',font:{size:11}}}},scales:{x:{ticks:{color:'#5a6677',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}
+    options:{responsive:true,plugins:{legend:{labels:{color:'var(--text-secondary)',font:{size:11}}}},scales:{x:{ticks:{color:'var(--text-tertiary)',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(0,0,0,0.03)'}}}}
   });
 
-  // Payment
   const ctx4 = document.getElementById('chartPayment');
   if(ctx4) new Chart(ctx4, {
     type:'doughnut',
     data:{
       labels:['Credit Card','Cash','No Charge','Dispute'],
-      datasets:[{data:[4990000,2601000,61000,16000],backgroundColor:['rgba(0,229,195,0.8)','rgba(245,197,24,0.8)','rgba(155,127,244,0.5)','rgba(255,74,107,0.5)'],borderColor:'var(--card)',borderWidth:3}]
+      datasets:[{data:[4990000,2601000,61000,16000],backgroundColor:[
+        'rgba(47,79,79,0.8)',
+        'rgba(51,51,51,0.8)',
+        'rgba(75,75,75,0.5)',
+        'rgba(92,81,71,0.5)'
+      ],borderColor:'var(--card-bg)',borderWidth:3}]
     },
-    options:{responsive:true,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'#8a97aa',font:{size:11},padding:12}}}}
+    options:{responsive:true,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'var(--text-secondary)',font:{size:11},padding:12}}}}
   });
 }
 
-// ═════════════ FARE CHARTS ═════════════
+// FARE CHARTS
 function renderFareCharts() {
-  // Fare distribution
   const fareBuckets = ['$0-5','$5-10','$10-15','$15-20','$20-30','$30-50','$50-100','$100+'];
   const fareData = [312000,1842000,2401000,1289000,987000,542000,243000,51000];
   const ctx1 = document.getElementById('chartFareDist');
   if(ctx1&&!ctx1._chartInit) { ctx1._chartInit=true; new Chart(ctx1, {
     type:'bar',
-    data:{labels:fareBuckets,datasets:[{data:fareData,backgroundColor:fareBuckets.map((_,i)=>i===2?'rgba(245,197,24,0.8)':'rgba(245,197,24,0.3)'),borderRadius:4}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:11}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}
+    data:{labels:fareBuckets,datasets:[{data:fareData,backgroundColor:fareBuckets.map((_,i)=>i===2?'rgba(51,51,51,0.8)':'rgba(51,51,51,0.3)'),borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:11}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(0,0,0,0.03)'}}}}
   }); }
 
-  // Tip rate
   const ctx2 = document.getElementById('chartTipRate');
   if(ctx2&&!ctx2._chartInit) { ctx2._chartInit=true; new Chart(ctx2, {
     type:'bar',
-    data:{labels:['Credit Card','Cash','No Charge'],datasets:[{label:'Avg Tip %',data:[18.4,0,0],backgroundColor:['rgba(0,229,195,0.7)','rgba(245,197,24,0.5)','rgba(155,127,244,0.5)'],borderRadius:4}]},
-    options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#8a97aa',font:{size:12}},grid:{display:false}}}}
+    data:{labels:['Credit Card','Cash','No Charge'],datasets:[{label:'Avg Tip %',data:[18.4,0,0],backgroundColor:[
+      'rgba(47,79,79,0.7)',
+      'rgba(51,51,51,0.5)',
+      'rgba(75,75,75,0.5)'
+    ],borderRadius:4}]},
+    options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-secondary)',font:{size:12}},grid:{display:false}}}}
   }); }
 
-  // Fare scatter (simulated)
   const scatterData = Array.from({length:150},()=>{
     const d = 0.3+Math.random()*12;
     const f = 2.5+d*2.5+(Math.random()-0.5)*4;
@@ -2780,19 +2899,24 @@ function renderFareCharts() {
   const ctx3 = document.getElementById('chartFareScatter');
   if(ctx3&&!ctx3._chartInit) { ctx3._chartInit=true; new Chart(ctx3, {
     type:'scatter',
-    data:{datasets:[{label:'Trip',data:scatterData,backgroundColor:'rgba(245,197,24,0.4)',pointRadius:3}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Distance (miles)',color:'#5a6677'},ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{title:{display:true,text:'Fare ($)',color:'#5a6677'},ticks:{color:'#5a6677',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.05)'}}}}
+    data:{datasets:[{label:'Trip',data:scatterData,backgroundColor:'rgba(51,51,51,0.4)',pointRadius:3}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Distance (miles)',color:'var(--text-tertiary)'},ticks:{color:'var(--text-tertiary)',font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},y:{title:{display:true,text:'Fare ($)',color:'var(--text-tertiary)'},ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(0,0,0,0.03)'}}}}
   }); }
 
-  // Rev composition
   const ctx4 = document.getElementById('chartRevComp');
   if(ctx4&&!ctx4._chartInit) { ctx4._chartInit=true; new Chart(ctx4, {
     type:'doughnut',
-    data:{labels:['Base Fare','Tips','MTA Tax','Tolls','Improvement','Extra'],datasets:[{data:[99.8,17.2,5.9,3.8,2.3,1.2],backgroundColor:['rgba(245,197,24,0.8)','rgba(0,229,195,0.8)','rgba(155,127,244,0.8)','rgba(255,140,66,0.8)','rgba(255,74,107,0.8)','rgba(34,209,122,0.8)'],borderColor:'var(--card)',borderWidth:3}]},
-    options:{responsive:true,cutout:'60%',plugins:{legend:{position:'right',labels:{color:'#8a97aa',font:{size:11},padding:12}},tooltip:{callbacks:{label:ctx=>`$${ctx.parsed.toFixed(1)}M (${(ctx.parsed/130.2*100).toFixed(1)}%)`}}}}
+    data:{labels:['Base Fare','Tips','MTA Tax','Tolls','Improvement','Extra'],datasets:[{data:[99.8,17.2,5.9,3.8,2.3,1.2],backgroundColor:[
+      'rgba(51,51,51,0.8)',
+      'rgba(47,79,79,0.8)',
+      'rgba(75,75,75,0.8)',
+      'rgba(92,81,71,0.8)',
+      'rgba(47,79,47,0.8)',
+      'rgba(75,75,75,0.5)'
+    ],borderColor:'var(--card-bg)',borderWidth:3}]},
+    options:{responsive:true,cutout:'60%',plugins:{legend:{position:'right',labels:{color:'var(--text-secondary)',font:{size:11},padding:12}},tooltip:{callbacks:{label:ctx=>`$${ctx.parsed.toFixed(1)}M (${(ctx.parsed/130.2*100).toFixed(1)}%)`}}}}
   }); }
 
-  // Fare rate table
   const rateData = [
     {rc:'1',desc:'Standard Rate',count:6742000,fare:12.40,dist:2.61,tip:18.6,rev:83.6,pct:87.9},
     {rc:'2',desc:'JFK (Flat)',count:166000,fare:52.80,dist:14.30,tip:14.2,rev:8.8,pct:2.2},
@@ -2803,50 +2927,48 @@ function renderFareCharts() {
   ];
   document.getElementById('fareRateTbody').innerHTML = rateData.map(r=>`
     <tr>
-      <td><span class="badge badge-gray">Code ${r.rc}</span></td>
+      <td><span class="badge badge-secondary">Code ${r.rc}</span></td>
       <td class="highlight">${r.desc}</td>
       <td>${r.count.toLocaleString()}</td>
-      <td style="color:var(--yellow)">$${r.fare.toFixed(2)}</td>
+      <td style="color:var(--accent-1)">$${r.fare.toFixed(2)}</td>
       <td>${r.dist.toFixed(2)} mi</td>
-      <td style="color:var(--green)">${r.tip}%</td>
-      <td style="color:var(--cyan)">$${r.rev}M</td>
-      <td><span style="font-family:'DM Mono',monospace;font-size:11px">${r.pct}%</span></td>
+      <td style="color:var(--accent-5)">${r.tip}%</td>
+      <td style="color:var(--accent-3)">$${r.rev}M</td>
+      <td><span style="font-size:11px">${r.pct}%</span></td>
     </tr>
   `).join('');
 }
 
-// ═════════════ TEMPORAL CHARTS ═════════════
+// TEMPORAL CHARTS
 function renderTemporalCharts() {
   const hours = Array.from({length:24},(_,i)=>`${i}:00`);
   const hourlyVol = [9400,5100,3200,2500,2800,6400,16200,28200,33500,25100,21500,24200,27000,25600,24100,26200,31600,38900,35700,31700,27400,23600,19500,15200];
   const hourlyFare = [15.8,16.2,17.1,17.8,16.4,15.2,13.1,11.8,11.2,12.4,13.2,13.8,14.2,14.0,13.8,14.2,14.8,15.4,16.2,17.1,17.8,18.4,18.2,17.2];
 
   const c1 = document.getElementById('chartHourlyTemporal');
-  if(c1&&!c1._chartInit) { c1._chartInit=true; new Chart(c1,{type:'bar',data:{labels:hours,datasets:[{data:hourlyVol,backgroundColor:hourlyVol.map((v,i)=>i>=16&&i<=19?'rgba(245,197,24,0.85)':i>=7&&i<=9?'rgba(0,229,195,0.6)':'rgba(245,197,24,0.25)'),borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:9}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+  if(c1&&!c1._chartInit) { c1._chartInit=true; new Chart(c1,{type:'bar',data:{labels:hours,datasets:[{data:hourlyVol,backgroundColor:hourlyVol.map((v,i)=>i>=16&&i<=19?'rgba(51,51,51,0.85)':i>=7&&i<=9?'rgba(47,79,79,0.6)':'rgba(51,51,51,0.25)'),borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:9}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(0,0,0,0.03)'}}}}}); }
 
   const c2 = document.getElementById('chartFareByHour');
-  if(c2&&!c2._chartInit) { c2._chartInit=true; new Chart(c2,{type:'line',data:{labels:hours,datasets:[{data:hourlyFare,borderColor:'var(--green)',backgroundColor:'rgba(34,209,122,0.05)',fill:true,tension:0.4,borderWidth:2,pointRadius:2,pointBackgroundColor:'var(--green)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:9}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+  if(c2&&!c2._chartInit) { c2._chartInit=true; new Chart(c2,{type:'line',data:{labels:hours,datasets:[{data:hourlyFare,borderColor:'var(--accent-5)',backgroundColor:'rgba(47,79,47,0.05)',fill:true,tension:0.4,borderWidth:2,pointRadius:2,pointBackgroundColor:'var(--accent-5)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:9}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(0,0,0,0.03)'}}}}}); }
 
   const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   const dayVol = [1142000,1189000,1218000,1241000,1287000,1102000,988000];
   const dayDuration = [12.2,11.8,11.9,12.1,13.4,13.8,12.9];
 
   const c3 = document.getElementById('chartDayOfWeek');
-  if(c3&&!c3._chartInit) { c3._chartInit=true; new Chart(c3,{type:'bar',data:{labels:days,datasets:[{data:dayVol,backgroundColor:days.map((_,i)=>i>=5?'rgba(245,197,24,0.7)':'rgba(245,197,24,0.3)'),borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000000).toFixed(2)+'M'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+  if(c3&&!c3._chartInit) { c3._chartInit=true; new Chart(c3,{type:'bar',data:{labels:days,datasets:[{data:dayVol,backgroundColor:days.map((_,i)=>i>=5?'rgba(51,51,51,0.7)':'rgba(51,51,51,0.3)'),borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>(v/1000000).toFixed(2)+'M'},grid:{color:'rgba(0,0,0,0.03)'}}}}}); }
 
   const c4 = document.getElementById('chartDurationDay');
-  if(c4&&!c4._chartInit) { c4._chartInit=true; new Chart(c4,{type:'line',data:{labels:days,datasets:[{data:dayDuration,borderColor:'var(--orange)',backgroundColor:'rgba(255,140,66,0.08)',fill:true,tension:0.3,borderWidth:2,pointRadius:4,pointBackgroundColor:'var(--orange)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>v+' min'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+  if(c4&&!c4._chartInit) { c4._chartInit=true; new Chart(c4,{type:'line',data:{labels:days,datasets:[{data:dayDuration,borderColor:'var(--accent-4)',backgroundColor:'rgba(92,81,71,0.08)',fill:true,tension:0.3,borderWidth:2,pointRadius:4,pointBackgroundColor:'var(--accent-4)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>v+' min'},grid:{color:'rgba(0,0,0,0.03)'}}}}}); }
 
-  // Weekly
   const wDays = Array.from({length:31},(_,i)=>`Jan ${i+1}`);
   const wData = wDays.map((_,i)=>{
     const base=240000; const we=[4,5,11,12,18,19,25,26].includes(i)?0.88:1; const h=i===0?0.62:1;
     return Math.floor((base+(Math.random()-0.5)*25000)*we*h);
   });
   const c5 = document.getElementById('chartWeekly');
-  if(c5&&!c5._chartInit) { c5._chartInit=true; new Chart(c5,{type:'line',data:{labels:wDays,datasets:[{data:wData,borderColor:'var(--yellow)',backgroundColor:'rgba(245,197,24,0.07)',fill:true,tension:0.3,borderWidth:2,pointRadius:2,pointBackgroundColor:(ctx)=>{ const we=[4,5,11,12,18,19,25,26]; return we.includes(ctx.dataIndex)?'var(--cyan)':'var(--yellow)'; }}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',maxTicksLimit:10,font:{size:9}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+  if(c5&&!c5._chartInit) { c5._chartInit=true; new Chart(c5,{type:'line',data:{labels:wDays,datasets:[{data:wData,borderColor:'var(--accent-1)',backgroundColor:'rgba(51,51,51,0.07)',fill:true,tension:0.3,borderWidth:2,pointRadius:2,pointBackgroundColor:(ctx)=>{ const we=[4,5,11,12,18,19,25,26]; return we.includes(ctx.dataIndex)?'var(--accent-3)':'var(--accent-1)'; }}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',maxTicksLimit:10,font:{size:9}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(0,0,0,0.03)'}}}}}); }
 
-  // Heatmap
   renderDemandHeatmap();
 }
 
@@ -2864,15 +2986,14 @@ function renderDemandHeatmap() {
   if(!container) return;
   const cellW = 36, cellH = 28;
   let html = `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:10px">`;
-  html += `<tr><td style="width:40px"></td>${daysH.map(d=>`<td style="width:${cellW}px;text-align:center;color:var(--text3);padding:4px;font-family:'DM Mono',monospace">${d}</td>`).join('')}</tr>`;
+  html += `<tr><td style="width:40px"></td>${daysH.map(d=>`<td style="width:${cellW}px;text-align:center;color:var(--text-tertiary);padding:4px;">${d}</td>`).join('')}</tr>`;
   hoursH.forEach((h,hi)=>{
-    html += `<tr><td style="color:var(--text3);font-family:'DM Mono',monospace;padding-right:6px;white-space:nowrap">${h}</td>`;
+    html += `<tr><td style="color:var(--text-tertiary);padding-right:6px;white-space:nowrap">${h}</td>`;
     daysH.forEach((d,di)=>{
       const val = matrix[di][hi];
       const intensity = val/maxVal;
       const alpha = 0.1+intensity*0.9;
-      const r=245,g=Math.floor(197*(1-intensity)+100*intensity),b=Math.floor(24*(1-intensity));
-      html += `<td style="width:${cellW}px;height:${cellH}px;background:rgba(${r},${g},${b},${alpha.toFixed(2)});border-radius:3px;margin:1px;cursor:pointer" title="${d} ${h}: ${(val/1000).toFixed(1)}K trips"></td>`;
+      html += `<td style="width:${cellW}px;height:${cellH}px;background:rgba(51,51,51,${alpha.toFixed(2)});border-radius:3px;margin:1px;cursor:pointer" title="${d} ${h}: ${(val/1000).toFixed(1)}K trips"></td>`;
     });
     html += `</tr>`;
   });
@@ -2880,14 +3001,14 @@ function renderDemandHeatmap() {
   container.innerHTML = html;
 }
 
-// ═════════════ PROCESSING CHARTS ═════════════
+// PROCESSING CHARTS
 function renderProcessingCharts() {
   const c1 = document.getElementById('chartExclusions');
   if(c1&&!c1._chartInit) { c1._chartInit=true; new Chart(c1,{
     type:'bar',
     data:{labels:['Invalid LocationID','Pax Count=0','Date out of Jan','Zero Distance','Negative Fare','Duplicates','Short Duration','Fare Outlier','Long Duration','Other'],
-      datasets:[{data:[22891,31298,20351,15340,4122,3891,8214,1043,312,3847],backgroundColor:'rgba(255,74,107,0.6)',borderRadius:3}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#8a97aa',font:{size:10}},grid:{display:false}}}}
+      datasets:[{data:[22891,31298,20351,15340,4122,3891,8214,1043,312,3847],backgroundColor:'rgba(92,81,71,0.6)',borderRadius:3}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-secondary)',font:{size:10}},grid:{display:false}}}}
   }); }
 
   const fields = ['fare_amount','trip_distance','passenger_count','total_amount','tip_amount','tolls_amount','mta_tax','extra','improvement','pickup_datetime','dropoff_datetime','pu_location','do_location','rate_code','payment_type','store_fwd'];
@@ -2895,18 +3016,17 @@ function renderProcessingCharts() {
   const c2 = document.getElementById('chartCompleteness');
   if(c2&&!c2._chartInit) { c2._chartInit=true; new Chart(c2,{
     type:'bar',
-    data:{labels:fields,datasets:[{data:complete,backgroundColor:complete.map(v=>v>=99.9?'rgba(34,209,122,0.7)':v>=99?'rgba(245,197,24,0.6)':'rgba(255,140,66,0.6)'),borderRadius:3}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:97,max:100,ticks:{color:'#5a6677',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#8a97aa',font:{size:9}},grid:{display:false}}}}
+    data:{labels:fields,datasets:[{data:complete,backgroundColor:complete.map(v=>v>=99.9?'rgba(47,79,47,0.7)':v>=99?'rgba(51,51,51,0.6)':'rgba(92,81,71,0.6)'),borderRadius:3}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:97,max:100,ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-secondary)',font:{size:9}},grid:{display:false}}}}
   }); }
 }
 
-// ═════════════ HEAP ALGORITHM ═════════════
+// HEAP ALGORITHM
 const ZONE_REVENUES = ZONES.slice(0,263).map(z=>({id:z.id,zone:z.zone,borough:z.borough,revenue:zoneTrips(z.id)*zoneFare(z.id)}));
 let heapChart = null;
 
 function runHeapDemo() {
   const k = parseInt(document.getElementById('kSlider').value);
-  // Custom max-heap implementation (no sort_values / heapq)
   const data = ZONE_REVENUES.map(z=>({...z}));
   const heap = [];
 
@@ -2942,15 +3062,15 @@ function runHeapDemo() {
     type:'bar',
     data:{
       labels:result.map(z=>z.zone.length>20?z.zone.substring(0,18)+'…':z.zone),
-      datasets:[{data:result.map(z=>Math.round(z.revenue/1000)),backgroundColor:result.map(z=>z.borough==='Manhattan'?'rgba(245,197,24,0.8)':z.borough==='Queens'?'rgba(155,127,244,0.8)':z.borough==='Brooklyn'?'rgba(0,229,195,0.8)':'rgba(255,140,66,0.8)'),borderRadius:4}]
+      datasets:[{data:result.map(z=>Math.round(z.revenue/1000)),backgroundColor:result.map(z=>z.borough==='Manhattan'?'rgba(51,51,51,0.8)':z.borough==='Queens'?'rgba(75,75,75,0.8)':z.borough==='Brooklyn'?'rgba(47,79,79,0.8)':'rgba(92,81,71,0.8)'),borderRadius:4}]
     },
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`$${ctx.parsed.toFixed(0)}K revenue`}}},scales:{x:{ticks:{color:'#5a6677',font:{size:10},callback:v=>'$'+v+'K'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#8a97aa',font:{size:10}},grid:{display:false}}}}
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`$${ctx.parsed.toFixed(0)}K revenue`}}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>'$'+v+'K'},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-secondary)',font:{size:10}},grid:{display:false}}}}
   });
 }
 
 let algoStep = 0;
 function initAlgoTrace() {
-  document.getElementById('algoTrace').innerHTML = '<span style="color:var(--text3)">Press "Step →" to begin algorithm trace…</span>';
+  document.getElementById('algoTrace').innerHTML = '<span style="color:var(--text-tertiary)">Press "Step" to begin algorithm trace…</span>';
   algoStep = 0;
   document.getElementById('stepInfo').textContent = 'Step 0 / 265';
 }
@@ -2960,7 +3080,7 @@ function stepAlgo() {
   const trace = document.getElementById('algoTrace');
   const z = ZONE_REVENUES[algoStep];
   const heap_size = Math.min(algoStep+1,10);
-  trace.innerHTML += `\n<span style="color:var(--text3)">[${algoStep+1}]</span> <span style="color:var(--cyan)">push</span>(<span style="color:var(--yellow)">${z.zone}</span>, $${(z.revenue/1000).toFixed(0)}K) → heap_size=${heap_size}`;
+  trace.innerHTML += `\n<span style="color:var(--text-tertiary)">[${algoStep+1}]</span> <span style="color:var(--accent-4)">push</span>(<span style="color:var(--accent-1)">${z.zone}</span>, $${(z.revenue/1000).toFixed(0)}K) → heap_size=${heap_size}`;
   trace.scrollTop = trace.scrollHeight;
   algoStep++;
   document.getElementById('stepInfo').textContent = `Step ${algoStep} / 265`;
@@ -2969,38 +3089,33 @@ function stepAlgo() {
 function resetAlgo() { initAlgoTrace(); }
 function updateK(v) { document.getElementById('kValue').textContent = 'k = '+v; }
 
-// ═════════════ ER DIAGRAM ═════════════
+// ER DIAGRAM
 function drawERDiagram() {
   const svg = document.getElementById('erDiagram');
   if(!svg||svg._drawn) return; svg._drawn=true;
   svg.innerHTML = `
-  <defs><marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#5a6677"/></marker></defs>
-  <!-- trips (center) -->
-  <rect x="300" y="50" width="300" height="300" rx="8" fill="#1c2330" stroke="#f5c518" stroke-width="1.5"/>
-  <text x="450" y="72" text-anchor="middle" fill="#f5c518" font-size="12" font-weight="700" font-family="DM Mono,monospace">trips</text>
-  <text x="450" y="88" text-anchor="middle" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">FACT TABLE · 7,667,792 rows</text>
-  ${['trip_id PK','tpep_pickup_datetime','tpep_dropoff_datetime','passenger_count','trip_distance','pu_location_id FK','do_location_id FK','rate_code_id FK','payment_type_id FK','fare_amount','tip_amount','total_amount','trip_duration_min *','speed_mph *','fare_per_mile *'].map((f,i)=>`<text x="318" y="${104+i*14}" fill="${f.includes('PK')?'#f5c518':f.includes('FK')?'#00e5c3':f.includes('*')?'#9b7ff4':'#8a97aa'}" font-size="10" font-family="DM Mono,monospace">${f}</text>`).join('')}
-  <!-- taxi_zones -->
-  <rect x="20" y="100" width="230" height="120" rx="8" fill="#1c2330" stroke="#00e5c3" stroke-width="1.5"/>
-  <text x="135" y="120" text-anchor="middle" fill="#00e5c3" font-size="12" font-weight="700" font-family="DM Mono,monospace">taxi_zones</text>
-  <text x="135" y="134" text-anchor="middle" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">DIM · 265 rows</text>
-  ${['location_id PK','borough','zone','service_zone'].map((f,i)=>`<text x="35" y="${150+i*14}" fill="${f.includes('PK')?'#00e5c3':'#8a97aa'}" font-size="10" font-family="DM Mono,monospace">${f}</text>`).join('')}
-  <!-- rate_codes -->
-  <rect x="640" y="60" width="200" height="100" rx="8" fill="#1c2330" stroke="#9b7ff4" stroke-width="1.5"/>
-  <text x="740" y="80" text-anchor="middle" fill="#9b7ff4" font-size="12" font-weight="700" font-family="DM Mono,monospace">rate_codes</text>
-  <text x="740" y="94" text-anchor="middle" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">DIM · 6 rows</text>
-  ${['rate_code_id PK','description'].map((f,i)=>`<text x="655" y="${110+i*14}" fill="${f.includes('PK')?'#9b7ff4':'#8a97aa'}" font-size="10" font-family="DM Mono,monospace">${f}</text>`).join('')}
-  <!-- payment_types -->
-  <rect x="640" y="220" width="200" height="100" rx="8" fill="#1c2330" stroke="#ff8c42" stroke-width="1.5"/>
-  <text x="740" y="240" text-anchor="middle" fill="#ff8c42" font-size="12" font-weight="700" font-family="DM Mono,monospace">payment_types</text>
-  <text x="740" y="254" text-anchor="middle" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">DIM · 4 rows</text>
-  ${['payment_type_id PK','description'].map((f,i)=>`<text x="655" y="${270+i*14}" fill="${f.includes('PK')?'#ff8c42':'#8a97aa'}" font-size="10" font-family="DM Mono,monospace">${f}</text>`).join('')}
-  <!-- arrows -->
-  <line x1="300" y1="165" x2="252" y2="165" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
-  <line x1="600" y1="100" x2="638" y2="100" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
-  <line x1="600" y1="260" x2="638" y2="260" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
-  <text x="260" y="158" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">pu/do →</text>
-  <text x="605" y="94" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">→</text>
+  <defs><marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="var(--text-tertiary)"/></marker></defs>
+  <rect x="300" y="50" width="300" height="300" rx="8" fill="var(--bg-tertiary)" stroke="var(--accent-1)" stroke-width="1.5"/>
+  <text x="450" y="72" text-anchor="middle" fill="var(--accent-1)" font-size="12" font-weight="700">trips</text>
+  <text x="450" y="88" text-anchor="middle" fill="var(--text-tertiary)" font-size="9">FACT TABLE · 7,667,792 rows</text>
+  ${['trip_id PK','tpep_pickup_datetime','tpep_dropoff_datetime','passenger_count','trip_distance','pu_location_id FK','do_location_id FK','rate_code_id FK','payment_type_id FK','fare_amount','tip_amount','total_amount','trip_duration_min *','speed_mph *','fare_per_mile *'].map((f,i)=>`<text x="318" y="${104+i*14}" fill="${f.includes('PK')?'var(--accent-1)':f.includes('FK')?'var(--accent-4)':f.includes('*')?'var(--accent-5)':'var(--text-secondary)'}" font-size="10">${f}</text>`).join('')}
+  <rect x="20" y="100" width="230" height="120" rx="8" fill="var(--bg-tertiary)" stroke="var(--accent-4)" stroke-width="1.5"/>
+  <text x="135" y="120" text-anchor="middle" fill="var(--accent-4)" font-size="12" font-weight="700">taxi_zones</text>
+  <text x="135" y="134" text-anchor="middle" fill="var(--text-tertiary)" font-size="9">DIM · 265 rows</text>
+  ${['location_id PK','borough','zone','service_zone'].map((f,i)=>`<text x="35" y="${150+i*14}" fill="${f.includes('PK')?'var(--accent-4)':'var(--text-secondary)'}" font-size="10">${f}</text>`).join('')}
+  <rect x="640" y="60" width="200" height="100" rx="8" fill="var(--bg-tertiary)" stroke="var(--accent-3)" stroke-width="1.5"/>
+  <text x="740" y="80" text-anchor="middle" fill="var(--accent-3)" font-size="12" font-weight="700">rate_codes</text>
+  <text x="740" y="94" text-anchor="middle" fill="var(--text-tertiary)" font-size="9">DIM · 6 rows</text>
+  ${['rate_code_id PK','description'].map((f,i)=>`<text x="655" y="${110+i*14}" fill="${f.includes('PK')?'var(--accent-3)':'var(--text-secondary)'}" font-size="10">${f}</text>`).join('')}
+  <rect x="640" y="220" width="200" height="100" rx="8" fill="var(--bg-tertiary)" stroke="var(--accent-4)" stroke-width="1.5"/>
+  <text x="740" y="240" text-anchor="middle" fill="var(--accent-4)" font-size="12" font-weight="700">payment_types</text>
+  <text x="740" y="254" text-anchor="middle" fill="var(--text-tertiary)" font-size="9">DIM · 4 rows</text>
+  ${['payment_type_id PK','description'].map((f,i)=>`<text x="655" y="${270+i*14}" fill="${f.includes('PK')?'var(--accent-4)':'var(--text-secondary)'}" font-size="10">${f}</text>`).join('')}
+  <line x1="300" y1="165" x2="252" y2="165" stroke="var(--text-tertiary)" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+  <line x1="600" y1="100" x2="638" y2="100" stroke="var(--text-tertiary)" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+  <line x1="600" y1="260" x2="638" y2="260" stroke="var(--text-tertiary)" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+  <text x="260" y="158" fill="var(--text-tertiary)" font-size="9">pu/do →</text>
+  <text x="605" y="94" fill="var(--text-tertiary)" font-size="9">→</text>
   `;
 }
 
@@ -3008,61 +3123,57 @@ function drawArchDiagram() {
   const svg = document.getElementById('archDiagram');
   if(!svg||svg._drawn) return; svg._drawn=true;
   svg.innerHTML = `
-  <defs><marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#5a6677"/></marker></defs>
-  <!-- Data Source -->
-  <rect x="10" y="80" width="140" height="80" rx="8" fill="#1c2330" stroke="#f5c518" stroke-width="1.5"/>
-  <text x="80" y="105" text-anchor="middle" fill="#f5c518" font-size="12" font-weight="700">Data Sources</text>
-  <text x="80" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">yellow_tripdata_2019-01</text>
-  <text x="80" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">taxi_zone_lookup.csv</text>
-  <text x="80" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">taxi_zones shapefile</text>
-  <!-- Processing -->
-  <rect x="200" y="80" width="130" height="80" rx="8" fill="#1c2330" stroke="#00e5c3" stroke-width="1.5"/>
-  <text x="265" y="105" text-anchor="middle" fill="#00e5c3" font-size="12" font-weight="700">Processing</text>
-  <text x="265" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">Python/Pandas</text>
-  <text x="265" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">pyarrow (parquet)</text>
-  <text x="265" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">Feature Engineering</text>
-  <!-- DB -->
-  <rect x="380" y="80" width="130" height="80" rx="8" fill="#1c2330" stroke="#9b7ff4" stroke-width="1.5"/>
-  <text x="445" y="105" text-anchor="middle" fill="#9b7ff4" font-size="12" font-weight="700">Database</text>
-  <text x="445" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">PostgreSQL</text>
-  <text x="445" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">4 normalized tables</text>
-  <text x="445" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">Indexed queries</text>
-  <!-- API -->
-  <rect x="560" y="80" width="120" height="80" rx="8" fill="#1c2330" stroke="#ff8c42" stroke-width="1.5"/>
-  <text x="620" y="105" text-anchor="middle" fill="#ff8c42" font-size="12" font-weight="700">Backend API</text>
-  <text x="620" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">Flask / Python</text>
-  <text x="620" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">REST endpoints</text>
-  <text x="620" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">Custom algorithms</text>
-  <!-- Frontend -->
-  <rect x="680" y="80" width="120" height="80" rx="8" fill="#1c2330" stroke="#22d17a" stroke-width="1.5"/>
-  <text x="740" y="105" text-anchor="middle" fill="#22d17a" font-size="12" font-weight="700">Frontend</text>
-  <text x="740" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">HTML/CSS/JS</text>
-  <text x="740" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">Chart.js</text>
-  <text x="740" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">Interactive Dashboard</text>
-  <!-- arrows -->
-  <line x1="152" y1="120" x2="198" y2="120" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr2)"/>
-  <line x1="332" y1="120" x2="378" y2="120" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr2)"/>
-  <line x1="512" y1="120" x2="558" y2="120" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr2)"/>
-  <line x1="682" y1="120" x2="678" y2="120" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <defs><marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="var(--text-tertiary)"/></marker></defs>
+  <rect x="10" y="80" width="140" height="80" rx="8" fill="var(--bg-tertiary)" stroke="var(--accent-1)" stroke-width="1.5"/>
+  <text x="80" y="105" text-anchor="middle" fill="var(--accent-1)" font-size="12" font-weight="700">Data Sources</text>
+  <text x="80" y="122" text-anchor="middle" fill="var(--text-secondary)" font-size="9">yellow_tripdata</text>
+  <text x="80" y="134" text-anchor="middle" fill="var(--text-secondary)" font-size="9">zone_lookup</text>
+  <rect x="200" y="80" width="130" height="80" rx="8" fill="var(--bg-tertiary)" stroke="var(--accent-4)" stroke-width="1.5"/>
+  <text x="265" y="105" text-anchor="middle" fill="var(--accent-4)" font-size="12" font-weight="700">Processing</text>
+  <text x="265" y="122" text-anchor="middle" fill="var(--text-secondary)" font-size="9">Python/Pandas</text>
+  <text x="265" y="134" text-anchor="middle" fill="var(--text-secondary)" font-size="9">Feature Eng.</text>
+  <rect x="380" y="80" width="130" height="80" rx="8" fill="var(--bg-tertiary)" stroke="var(--accent-3)" stroke-width="1.5"/>
+  <text x="445" y="105" text-anchor="middle" fill="var(--accent-3)" font-size="12" font-weight="700">Database</text>
+  <text x="445" y="122" text-anchor="middle" fill="var(--text-secondary)" font-size="9">PostgreSQL</text>
+  <text x="445" y="134" text-anchor="middle" fill="var(--text-secondary)" font-size="9">4 tables</text>
+  <rect x="560" y="80" width="120" height="80" rx="8" fill="var(--bg-tertiary)" stroke="var(--accent-4)" stroke-width="1.5"/>
+  <text x="620" y="105" text-anchor="middle" fill="var(--accent-4)" font-size="12" font-weight="700">Backend API</text>
+  <text x="620" y="122" text-anchor="middle" fill="var(--text-secondary)" font-size="9">Flask</text>
+  <rect x="680" y="80" width="120" height="80" rx="8" fill="var(--bg-tertiary)" stroke="var(--accent-5)" stroke-width="1.5"/>
+  <text x="740" y="105" text-anchor="middle" fill="var(--accent-5)" font-size="12" font-weight="700">Frontend</text>
+  <text x="740" y="122" text-anchor="middle" fill="var(--text-secondary)" font-size="9">HTML/CSS/JS</text>
+  <text x="740" y="134" text-anchor="middle" fill="var(--text-secondary)" font-size="9">Chart.js</text>
+  <line x1="152" y1="120" x2="198" y2="120" stroke="var(--text-tertiary)" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="332" y1="120" x2="378" y2="120" stroke="var(--text-tertiary)" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="512" y1="120" x2="558" y2="120" stroke="var(--text-tertiary)" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="682" y1="120" x2="678" y2="120" stroke="var(--text-tertiary)" stroke-width="1.5" marker-end="url(#arr2)"/>
   `;
 }
 
-// ═════════════ INSIGHT CHARTS ═════════════
+// INSIGHT CHARTS
 function renderInsightCharts() {
   const c1 = document.getElementById('chartInsight1');
-  if(c1&&!c1._chartInit) { c1._chartInit=true; new Chart(c1,{type:'doughnut',data:{labels:['Manhattan Yellow Zone','Manhattan Boro','Queens','Brooklyn','Bronx','Staten Island','Airports'],datasets:[{data:[52.4,12.0,13.3,9.7,3.0,0.8,8.8],backgroundColor:['rgba(245,197,24,0.85)','rgba(245,197,24,0.4)','rgba(155,127,244,0.8)','rgba(0,229,195,0.8)','rgba(255,140,66,0.8)','rgba(255,74,107,0.8)','rgba(34,209,122,0.8)'],borderColor:'var(--card)',borderWidth:3}]},options:{responsive:true,cutout:'60%',plugins:{legend:{position:'right',labels:{color:'#8a97aa',font:{size:10}}}}}}); }
+  if(c1&&!c1._chartInit) { c1._chartInit=true; new Chart(c1,{type:'doughnut',data:{labels:['Manhattan Yellow Zone','Manhattan Boro','Queens','Brooklyn','Bronx','Staten Island','Airports'],datasets:[{data:[52.4,12.0,13.3,9.7,3.0,0.8,8.8],backgroundColor:[
+    'rgba(51,51,51,0.85)',
+    'rgba(51,51,51,0.4)',
+    'rgba(75,75,75,0.8)',
+    'rgba(47,79,79,0.8)',
+    'rgba(92,81,71,0.8)',
+    'rgba(47,79,47,0.8)',
+    'rgba(75,75,75,0.5)'
+  ],borderColor:'var(--card-bg)',borderWidth:3}]},options:{responsive:true,cutout:'60%',plugins:{legend:{position:'right',labels:{color:'var(--text-secondary)',font:{size:10}}}}}}); }
 
   const c2 = document.getElementById('chartInsight2');
-  if(c2&&!c2._chartInit) { c2._chartInit=true; new Chart(c2,{type:'line',data:{labels:Array.from({length:24},(_,i)=>i+':00'),datasets:[{label:'Avg trips/hr',data:[9400,5100,3200,2500,2800,6400,16200,28200,33500,25100,21500,24200,27000,25600,24100,26200,31600,38900,35700,31700,27400,23600,19500,15200],borderColor:'var(--yellow)',backgroundColor:'rgba(245,197,24,0.08)',fill:true,tension:0.4,borderWidth:2,pointRadius:0}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:9},maxTicksLimit:8},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+  if(c2&&!c2._chartInit) { c2._chartInit=true; new Chart(c2,{type:'line',data:{labels:Array.from({length:24},(_,i)=>i+':00'),datasets:[{label:'Avg trips/hr',data:[9400,5100,3200,2500,2800,6400,16200,28200,33500,25100,21500,24200,27000,25600,24100,26200,31600,38900,35700,31700,27400,23600,19500,15200],borderColor:'var(--accent-1)',backgroundColor:'rgba(51,51,51,0.08)',fill:true,tension:0.4,borderWidth:2,pointRadius:0}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',font:{size:9},maxTicksLimit:8},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(0,0,0,0.03)'}}}}}); }
 
   const c3 = document.getElementById('chartInsight3');
-  if(c3&&!c3._chartInit) { c3._chartInit=true; new Chart(c3,{type:'bar',data:{labels:['Yellow Zone','Boro Zone','JFK Airport','LGA Airport','Newark'],datasets:[{label:'Avg Fare',data:[13.02,10.40,52.80,18.40,38.20],backgroundColor:'rgba(245,197,24,0.6)',borderRadius:3,yAxisID:'y'},{label:'Tip %',data:[18.4,16.2,14.2,16.1,12.8],backgroundColor:'rgba(0,229,195,0.6)',borderRadius:3,yAxisID:'y2'}]},options:{responsive:true,plugins:{legend:{labels:{color:'#8a97aa',font:{size:11}}}},scales:{x:{ticks:{color:'#8a97aa',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.05)'}},y2:{position:'right',ticks:{color:'var(--cyan)',font:{size:10},callback:v=>v+'%'},grid:{display:false}}}}}); }
+  if(c3&&!c3._chartInit) { c3._chartInit=true; new Chart(c3,{type:'bar',data:{labels:['Yellow Zone','Boro Zone','JFK Airport','LGA Airport','Newark'],datasets:[{label:'Avg Fare',data:[13.02,10.40,52.80,18.40,38.20],backgroundColor:'rgba(51,51,51,0.6)',borderRadius:3,yAxisID:'y'},{label:'Tip %',data:[18.4,16.2,14.2,16.1,12.8],backgroundColor:'rgba(47,79,79,0.6)',borderRadius:3,yAxisID:'y2'}]},options:{responsive:true,plugins:{legend:{labels:{color:'var(--text-secondary)',font:{size:11}}}},scales:{x:{ticks:{color:'var(--text-secondary)',font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(0,0,0,0.03)'}},y2:{position:'right',ticks:{color:'var(--accent-4)',font:{size:10},callback:v=>v+'%'},grid:{display:false}}}}}); }
 
   const c4 = document.getElementById('chartSpeed');
-  if(c4&&!c4._chartInit) { c4._chartInit=true; new Chart(c4,{type:'bar',data:{labels:['0-5','5-10','10-15','15-20','20-25','25-30','30-40','40+'],datasets:[{data:[198000,842000,2140000,2280000,1430000,620000,145000,12000],backgroundColor:'rgba(155,127,244,0.6)',borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Speed (mph)',color:'#5a6677',font:{size:10}},ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000000).toFixed(2)+'M'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+  if(c4&&!c4._chartInit) { c4._chartInit=true; new Chart(c4,{type:'bar',data:{labels:['0-5','5-10','10-15','15-20','20-25','25-30','30-40','40+'],datasets:[{data:[198000,842000,2140000,2280000,1430000,620000,145000,12000],backgroundColor:'rgba(75,75,75,0.6)',borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Speed (mph)',color:'var(--text-tertiary)',font:{size:10}},ticks:{color:'var(--text-tertiary)',font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:10},callback:v=>(v/1000000).toFixed(2)+'M'},grid:{color:'rgba(0,0,0,0.03)'}}}}}); }
 }
 
-// ═════════════ MODALS ═════════════
+// MODALS
 function showTripModal(idx) {
   const t = allTrips[idx];
   document.getElementById('modal-trip-title').textContent = `Trip #${t.id.toLocaleString()}`;
@@ -3073,13 +3184,19 @@ function showTripModal(idx) {
     {label:'Passengers',value:t.passengers},{label:'Rate Code',value:t.rateCode},
     {label:'Payment',value:t.payment},{label:'Fare',value:'$'+t.fare.toFixed(2)},
     {label:'Tip',value:'$'+t.tip.toFixed(2)},{label:'Total',value:'$'+t.total.toFixed(2)},
-    {label:'Speed (derived)',value:((t.distance/(t.duration/60))).toFixed(1)+' mph'},
-    {label:'Fare/Mile (derived)',value:'$'+(t.fare/t.distance).toFixed(2)+'/mi'},
+    {label:'Speed',value:((t.distance/(t.duration/60))).toFixed(1)+' mph'},
+    {label:'Fare/Mile',value:'$'+(t.fare/t.distance).toFixed(2)+'/mi'},
   ].map(d=>`<div class="detail-item"><div class="detail-label">${d.label}</div><div class="detail-value" style="font-size:14px">${d.value}</div></div>`).join('');
 
   const old = document.getElementById('modalFareChart');
   if(old._chart) old._chart.destroy();
-  old._chart = new Chart(old,{type:'doughnut',data:{labels:['Fare','Tip','MTA','Tolls','Improvement'],datasets:[{data:[t.fare,t.tip,t.mta,t.tolls,t.improvement],backgroundColor:['rgba(245,197,24,0.8)','rgba(0,229,195,0.8)','rgba(155,127,244,0.8)','rgba(255,140,66,0.8)','rgba(255,74,107,0.8)'],borderColor:'var(--card)',borderWidth:2}]},options:{responsive:true,cutout:'55%',plugins:{legend:{labels:{color:'#8a97aa',font:{size:10}}}}}});
+  old._chart = new Chart(old,{type:'doughnut',data:{labels:['Fare','Tip','MTA','Tolls','Improvement'],datasets:[{data:[t.fare,t.tip,t.mta,t.tolls,t.improvement],backgroundColor:[
+    'rgba(51,51,51,0.8)',
+    'rgba(47,79,79,0.8)',
+    'rgba(75,75,75,0.8)',
+    'rgba(92,81,71,0.8)',
+    'rgba(47,79,47,0.8)'
+  ],borderColor:'var(--card-bg)',borderWidth:2}]},options:{responsive:true,cutout:'55%',plugins:{legend:{labels:{color:'var(--text-secondary)',font:{size:10}}}}}});
 
   document.getElementById('tripModal').classList.add('open');
 }
@@ -3101,7 +3218,7 @@ function showZoneModal(id) {
   const old = document.getElementById('modalZoneChart');
   if(old._chart) old._chart.destroy();
   const hourlyData = Array.from({length:24},(_,h)=>Math.floor(trips/24*(0.5+Math.sin((h-8)*Math.PI/12)*0.5+Math.random()*0.3)));
-  old._chart = new Chart(old,{type:'bar',data:{labels:Array.from({length:24},(_,i)=>i+':00'),datasets:[{data:hourlyData,backgroundColor:'rgba(245,197,24,0.5)',borderRadius:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',maxTicksLimit:8,font:{size:9}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+  old._chart = new Chart(old,{type:'bar',data:{labels:Array.from({length:24},(_,i)=>i+':00'),datasets:[{data:hourlyData,backgroundColor:'rgba(51,51,51,0.5)',borderRadius:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--text-tertiary)',maxTicksLimit:8,font:{size:9}},grid:{color:'rgba(0,0,0,0.03)'}},y:{ticks:{color:'var(--text-tertiary)',font:{size:9}},grid:{color:'rgba(0,0,0,0.03)'}}}}});
 
   document.getElementById('zoneModal').classList.add('open');
 }
@@ -3109,7 +3226,7 @@ function showZoneModal(id) {
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
 
-// ═════════════ TABLE SORTING ═════════════
+// TABLE SORTING
 function sortTable(id, col) {
   const table = document.getElementById(id);
   const tbody = table.querySelector('tbody');
@@ -3135,7 +3252,7 @@ function sortTrips(field) {
   currentPage=1; renderTripsTable();
 }
 
-// ═════════════ TAB SYSTEM ═════════════
+// TAB SYSTEM
 function switchTab(page, tab, btn) {
   document.querySelectorAll(`#page-${page} .tab-content`).forEach(c=>c.classList.remove('active'));
   document.querySelectorAll(`#page-${page} .tab-btn`).forEach(b=>b.classList.remove('active'));
@@ -3144,9 +3261,13 @@ function switchTab(page, tab, btn) {
   if(page==='temporal') renderTemporalCharts();
 }
 
-// ═════════════ MISC ACTIONS ═════════════
+// MISC ACTIONS
 function refreshKPIs() { buildMiniCharts(); }
 function toggleBorough() { const p=document.getElementById('pill-borough'); p.classList.toggle('active'); }
+function selectMonth(pill, month) { 
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+  pill.classList.add('active');
+}
 function exportData() {
   const rows = [['ID','Pickup','Dropoff','Duration','PU Zone','DO Zone','Pax','Distance','Fare','Tip','Total','Payment','Rate']];
   filteredTrips.slice(0,100).forEach(t=>rows.push([t.id,t.pickup,t.dropoff,t.duration,t.puName,t.doName,t.passengers,t.distance,t.fare.toFixed(2),t.tip.toFixed(2),t.total.toFixed(2),t.payment,t.rateCode]));
@@ -3155,7 +3276,7 @@ function exportData() {
 }
 function exportTrips() { exportData(); }
 
-// ═════════════ INIT ═════════════
+// INIT
 buildMiniCharts();
 renderTopZonesTable();
 renderOverviewCharts();
