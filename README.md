@@ -87,7 +87,7 @@ nyc-tlc-mobility-explorer/
 ### Quick Start
 1. Clone the repository:
    ```bash
-   git clone https://github.com/BYUSAA/
+   git clone [https://github.com/BYUSAA/](https://github.com/BYUSAA/NYC-URBAN-MOBILITY-EXPLORER.git)
    cd nyc-tlc-mobility-explorer
    ```
 
