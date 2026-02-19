@@ -87,7 +87,7 @@ nyc-tlc-mobility-explorer/
 ### Quick Start
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/BYUSAA/](https://github.com/BYUSAA/NYC-URBAN-MOBILITY-EXPLORER.git)
+   git clone https://github.com/BYUSAA/
    cd nyc-tlc-mobility-explorer
    ```
 
@@ -95,11 +95,6 @@ nyc-tlc-mobility-explorer/
    ```bash
    open index.html  # macOS
    start index.html # Windows
-   ```
-
-3. For development with live reload:
-   ```bash
-   npx live-server
    ```
 
 ### Data Generation
