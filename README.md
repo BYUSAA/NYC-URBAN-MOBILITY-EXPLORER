@@ -157,6 +157,8 @@ _____________________________________________________________________
   
 **Team participation sheet link: https://docs.google.com/spreadsheets/d/1Dzq8Fro2Gq8h618v-cAFG4uUeZuVvV6BlkPYUldZ-aE/edit?usp=sharing**
 
+## the video of testing : https://drive.google.com/file/d/1cBK7RIUAqMHnr-KeBZrEODj60sBr28bt/view?usp=sharing
+
 The application uses two primary data sources:
 
 ## License
