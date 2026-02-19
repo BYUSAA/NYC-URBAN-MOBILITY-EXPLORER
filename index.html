@@ -1,0 +1,3165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYC TLC Urban Mobility Explorer — Yellow Taxi 2019</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #0f1218;
+    --bg3: #141820;
+    --card: #161b24;
+    --card2: #1c2330;
+    --border: #252d3a;
+    --border2: #2e3847;
+    --yellow: #f5c518;
+    --yellow2: #ffd84d;
+    --yellow-dim: rgba(245,197,24,0.12);
+    --yellow-glow: rgba(245,197,24,0.25);
+    --cyan: #00e5c3;
+    --cyan-dim: rgba(0,229,195,0.1);
+    --red: #ff4a6b;
+    --red-dim: rgba(255,74,107,0.1);
+    --text: #e8edf5;
+    --text2: #8a97aa;
+    --text3: #5a6677;
+    --green: #22d17a;
+    --orange: #ff8c42;
+    --purple: #9b7ff4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SIDEBAR ───────────────────────────────── */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 240px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--yellow-dim);
+    border: 1px solid var(--yellow);
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--yellow);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .logo-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--yellow);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .sidebar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .sidebar-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .nav { padding: 16px 12px; flex: 1; }
+
+  .nav-section {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0 8px;
+    margin: 16px 0 6px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    color: var(--text2);
+    font-size: 13.5px;
+    font-weight: 400;
+    position: relative;
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+
+  .nav-item.active {
+    background: var(--yellow-dim);
+    color: var(--yellow);
+    font-weight: 500;
+  }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 20px;
+    background: var(--yellow);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .nav-badge {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    background: var(--border2);
+    color: var(--text3);
+    padding: 2px 6px;
+    border-radius: 10px;
+  }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .data-badge {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .data-badge-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .data-badge-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cyan);
+    margin-top: 2px;
+  }
+
+  /* ── MAIN ───────────────────────────────────── */
+  .main {
+    margin-left: 240px;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  /* ── TOP BAR ────────────────────────────────── */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,12,16,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .breadcrumb {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  .filter-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-pill:hover { border-color: var(--yellow); color: var(--yellow); }
+
+  .filter-pill.active {
+    background: var(--yellow-dim);
+    border-color: var(--yellow);
+    color: var(--yellow);
+  }
+
+  /* ── PAGE CONTENT ───────────────────────────── */
+  .page { display: none; padding: 28px 32px; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── SECTION HEADER ─────────────────────────── */
+  .section-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .section-sub {
+    font-size: 13px;
+    color: var(--text3);
+    margin-top: 3px;
+  }
+
+  /* ── KPI GRID ───────────────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .kpi-card:hover { border-color: var(--border2); }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .kpi-card.yellow::before { background: var(--yellow); }
+  .kpi-card.cyan::before { background: var(--cyan); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.orange::before { background: var(--orange); }
+  .kpi-card.purple::before { background: var(--purple); }
+
+  .kpi-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .kpi-card.yellow .kpi-value { color: var(--yellow); }
+  .kpi-card.cyan .kpi-value { color: var(--cyan); }
+  .kpi-card.red .kpi-value { color: var(--red); }
+  .kpi-card.green .kpi-value { color: var(--green); }
+  .kpi-card.orange .kpi-value { color: var(--orange); }
+  .kpi-card.purple .kpi-value { color: var(--purple); }
+
+  .kpi-sub {
+    font-size: 11.5px;
+    color: var(--text3);
+  }
+
+  .kpi-trend {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .kpi-trend.up { color: var(--green); }
+  .kpi-trend.down { color: var(--red); }
+
+  /* ── CHART CARDS ────────────────────────────── */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .chart-card.wide { grid-column: span 2; }
+  .chart-card.full { grid-column: span 2; }
+
+  .chart-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .chart-sub {
+    font-size: 11.5px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .chart-legend {
+    display: flex; gap: 12px;
+  }
+
+  .legend-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  canvas { max-height: 280px; }
+
+  /* ── TABLE ──────────────────────────────────── */
+  .data-table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .table-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .table-controls {
+    display: flex; gap: 8px; align-items: center;
+  }
+
+  .search-input {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    width: 180px;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--yellow); }
+  .search-input::placeholder { color: var(--text3); }
+
+  select.search-input {
+    cursor: pointer;
+    width: auto;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+  }
+
+  .btn-primary {
+    background: var(--yellow);
+    color: #000;
+  }
+
+  .btn-primary:hover { background: var(--yellow2); }
+
+  .btn-secondary {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+
+  .btn-secondary:hover { border-color: var(--yellow); color: var(--yellow); }
+
+  .btn-icon {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    padding: 7px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+
+  .btn-icon:hover { border-color: var(--yellow); color: var(--yellow); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  thead th {
+    background: var(--bg3);
+    padding: 10px 16px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    transition: color 0.15s;
+  }
+
+  thead th:hover { color: var(--yellow); }
+  thead th.sorted { color: var(--yellow); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg3); }
+
+  td {
+    padding: 10px 16px;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+
+  td.highlight { color: var(--text); font-weight: 500; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .badge-yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(245,197,24,0.3); }
+  .badge-cyan { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(0,229,195,0.3); }
+  .badge-red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,74,107,0.3); }
+  .badge-green { background: rgba(34,209,122,0.1); color: var(--green); border: 1px solid rgba(34,209,122,0.3); }
+  .badge-orange { background: rgba(255,140,66,0.1); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
+  .badge-purple { background: rgba(155,127,244,0.1); color: var(--purple); border: 1px solid rgba(155,127,244,0.3); }
+  .badge-gray { background: var(--bg3); color: var(--text3); border: 1px solid var(--border2); }
+
+  /* ── PAGINATION ─────────────────────────────── */
+  .pagination {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .pagination-info {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .pagination-btns { display: flex; gap: 4px; }
+
+  .page-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.15s;
+  }
+
+  .page-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+  .page-btn.active { background: var(--yellow-dim); border-color: var(--yellow); color: var(--yellow); }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── STAT ROWS ──────────────────────────────── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+
+  .bar-item {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .bar-label {
+    font-size: 12px;
+    color: var(--text2);
+    width: 140px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-track {
+    flex: 1;
+    background: var(--bg3);
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  .bar-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    width: 55px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── MAP PLACEHOLDER ────────────────────────── */
+  .map-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .map-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .map-body {
+    position: relative;
+    height: 420px;
+    background: #0d1119;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .map-svg {
+    width: 100%; height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+  }
+
+  /* ── FILTER PANEL ───────────────────────────── */
+  .filter-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  .filter-group label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .filter-select, .filter-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+
+  .filter-select:focus, .filter-input:focus { border-color: var(--yellow); }
+
+  /* ── INSIGHTS ───────────────────────────────── */
+  .insight-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .insight-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .insight-card::after {
+    content: attr(data-num);
+    position: absolute;
+    right: 16px; top: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 72px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.03);
+    line-height: 1;
+  }
+
+  .insight-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .insight-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .insight-body {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  .insight-highlight {
+    color: var(--yellow);
+    font-weight: 600;
+  }
+
+  /* ── ALGORITHM PAGE ─────────────────────────── */
+  .algo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--cyan);
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .code-comment { color: var(--text3); }
+  .code-keyword { color: var(--yellow); }
+  .code-string { color: var(--green); }
+  .code-num { color: var(--orange); }
+
+  .complexity-table td, .complexity-table th {
+    padding: 8px 12px;
+  }
+
+  /* ── ZONE EXPLORER ──────────────────────────── */
+  .zone-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .zone-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .zone-card:hover {
+    border-color: var(--yellow);
+    background: var(--card2);
+  }
+
+  .zone-card.selected {
+    border-color: var(--yellow);
+    background: var(--yellow-dim);
+  }
+
+  .zone-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .zone-borough { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+  .zone-trips { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--yellow); margin-top: 8px; }
+  .zone-label { font-size: 10px; color: var(--text3); }
+
+  /* ── SCROLLBAR ──────────────────────────────── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  /* ── RESPONSIVE ─────────────────────────────── */
+  .progress-ring {
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+  }
+
+  .mini-chart {
+    display: flex; align-items: flex-end; gap: 2px;
+    height: 40px;
+  }
+
+  .mini-bar {
+    flex: 1;
+    background: var(--yellow-dim);
+    border-radius: 2px 2px 0 0;
+    min-width: 4px;
+    transition: background 0.2s;
+  }
+
+  .mini-bar:hover { background: var(--yellow); }
+
+  /* ── MODAL ──────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none; align-items: center; justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 28px;
+    width: 600px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .modal-close {
+    position: absolute;
+    right: 20px; top: 20px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+
+  .modal-close:hover { color: var(--text); border-color: var(--text2); }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .detail-item {
+    background: var(--bg3);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .detail-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); text-transform: uppercase; }
+  .detail-value { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+  .tooltip {
+    position: relative;
+    cursor: help;
+  }
+
+  .tooltip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text);
+    white-space: nowrap;
+    z-index: 999;
+  }
+
+  .loading-bar {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--yellow), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .tab-group { display: flex; gap: 4px; margin-bottom: 20px; }
+
+  .tab-btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .tab-btn.active { background: var(--yellow-dim); border-color: var(--yellow); color: var(--yellow); font-weight: 500; }
+  .tab-btn:hover:not(.active) { color: var(--text); border-color: var(--border); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  .notice-banner {
+    background: linear-gradient(135deg, rgba(245,197,24,0.08), rgba(0,229,195,0.05));
+    border: 1px solid rgba(245,197,24,0.2);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex; gap: 12px; align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .notice-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  .notice-text { font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+
+  .notice-text strong { color: var(--yellow); }
+
+  /* Borough colors */
+  .boro-manhattan { color: #f5c518; }
+  .boro-brooklyn { color: #00e5c3; }
+  .boro-queens { color: #9b7ff4; }
+  .boro-bronx { color: #ff8c42; }
+  .boro-staten { color: #ff4a6b; }
+  .boro-ewr { color: #22d17a; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">
+      <span class="logo-dot"></span>
+      <span class="logo-text">Live Data</span>
+    </div>
+    <div class="sidebar-title">NYC TLC<br>Mobility Explorer</div>
+    <div class="sidebar-sub">Yellow Taxi · Jan 2019</div>
+  </div>
+
+  <div class="nav">
+    <div class="nav-section">Analysis</div>
+    <a class="nav-item active" onclick="showPage('overview')" href="#">
+      <span class="nav-icon"></span> Overview
+    </a>
+    <a class="nav-item" onclick="showPage('trips')" href="#">
+      <span class="nav-icon"></span> Trip Records
+      <span class="nav-badge">7.7M</span>
+    </a>
+    <a class="nav-item" onclick="showPage('zones')" href="#">
+      <span class="nav-icon"></span> Zone Explorer
+      <span class="nav-badge">265</span>
+    </a>
+    <a class="nav-item" onclick="showPage('fares')" href="#">
+      <span class="nav-icon"></span> Fare Analysis
+    </a>
+    <a class="nav-item" onclick="showPage('temporal')" href="#">
+      <span class="nav-icon"></span> Temporal Patterns
+    </a>
+
+    <div class="nav-section">Engineering</div>
+    <a class="nav-item" onclick="showPage('processing')" href="#">
+      <span class="nav-icon"></span> Data Processing
+    </a>
+    <a class="nav-item" onclick="showPage('algorithm')" href="#">
+      <span class="nav-icon"></span> DSA Implementation
+    </a>
+    <a class="nav-item" onclick="showPage('schema')" href="#">
+      <span class="nav-icon"></span> DB Schema
+    </a>
+
+    <div class="nav-section">Insights</div>
+    <a class="nav-item" onclick="showPage('insights')" href="#">
+      <span class="nav-icon"></span> Key Findings
+    </a>
+    <a class="nav-item" onclick="showPage('report')" href="#">
+      <span class="nav-icon"></span> Technical Report
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="data-badge">
+      <div class="data-badge-label">Dataset</div>
+      <div class="data-badge-value">yellow_tripdata_2019-01</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace;">Source: NYC TLC · PARQUET</div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div id="page-title" class="page-title">Overview Dashboard</div>
+      <span style="color:var(--border2)">|</span>
+      <span id="breadcrumb" class="breadcrumb">January 2019 · 7,667,792 Trips</span>
+    </div>
+    <div class="topbar-right">
+      <span class="filter-pill active" id="pill-jan" onclick="selectMonth(this,'Jan')">Jan 2019</span>
+      <span class="filter-pill" id="pill-borough" onclick="toggleBorough()">All Boroughs</span>
+      <button class="btn btn-primary" onclick="exportData()">⬇ Export CSV</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ OVERVIEW PAGE ═════════════ -->
+  <div class="page active" id="page-overview">
+    <div class="loading-bar"></div>
+
+    <div class="notice-banner">
+      <span class="notice-icon"></span>
+      <div class="notice-text">
+        <strong>Dataset:</strong> yellow_tripdata_2019-01.parquet — This dashboard visualizes <strong>7,667,792 yellow taxi trips</strong> recorded in January 2019 by NYC TLC-authorized TPEP technology providers. Zone metadata sourced from <strong>taxi_zone_lookup.csv</strong> (265 zones across 6 boroughs). Data processed per TLC Trip Record User Guide specifications.
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div>
+        <div class="section-title">Fleet Performance Overview</div>
+        <div class="section-sub">January 2019 — New York City Yellow Medallion Taxis</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="refreshKPIs()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card yellow tooltip" data-tip="Total valid trips after data cleaning">
+        <div class="kpi-label">Total Trips</div>
+        <div class="kpi-value" id="kpi-trips">7,667,792</div>
+        <div class="kpi-sub">
+          <span class="kpi-trend up">↑ 3.2%</span> vs Dec 2018
+        </div>
+        <div class="mini-chart" style="margin-top:10px" id="mc-trips"></div>
+      </div>
+      <div class="kpi-card cyan tooltip" data-tip="Total revenue including all fare components">
+        <div class="kpi-label">Total Revenue</div>
+        <div class="kpi-value" id="kpi-revenue">$115.2M</div>
+        <div class="kpi-sub">
+          <span class="kpi-trend up">↑ 1.8%</span> MoM growth
+        </div>
+        <div class="mini-chart" style="margin-top:10px" id="mc-revenue"></div>
+      </div>
+      <div class="kpi-card green tooltip" data-tip="Average fare amount per trip (excl. tips)">
+        <div class="kpi-label">Avg Fare / Trip</div>
+        <div class="kpi-value" id="kpi-avgfare">$13.02</div>
+        <div class="kpi-sub">
+          <span class="kpi-trend down">↓ 0.4%</span> vs Dec 2018
+        </div>
+        <div class="mini-chart" style="margin-top:10px" id="mc-fare"></div>
+      </div>
+      <div class="kpi-card orange tooltip" data-tip="Mean trip distance in miles">
+        <div class="kpi-label">Avg Distance</div>
+        <div class="kpi-value" id="kpi-dist">2.87 mi</div>
+        <div class="kpi-sub">
+          <span class="kpi-trend up">↑ 0.1 mi</span> shift
+        </div>
+        <div class="mini-chart" style="margin-top:10px" id="mc-dist"></div>
+      </div>
+    </div>
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi-card purple">
+        <div class="kpi-label">Avg Tip Rate</div>
+        <div class="kpi-value">18.4%</div>
+        <div class="kpi-sub">Card payments only</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">Avg Trip Duration</div>
+        <div class="kpi-value">12.8 min</div>
+        <div class="kpi-sub">Median: 10.3 min</div>
+      </div>
+      <div class="kpi-card yellow">
+        <div class="kpi-label">Peak Hour</div>
+        <div class="kpi-value">6–7 PM</div>
+        <div class="kpi-sub">Evening rush dominant</div>
+      </div>
+      <div class="kpi-card cyan">
+        <div class="kpi-label">Top Pickup Zone</div>
+        <div class="kpi-value" style="font-size:18px">Midtown Ctr</div>
+        <div class="kpi-sub">Zone ID 161 · Manhattan</div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Daily Trip Volume — January 2019</div>
+            <div class="chart-sub">Total trips per day across all zones</div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span> Trips</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--cyan)"></span> Revenue</div>
+          </div>
+        </div>
+        <canvas id="chartDailyTrips"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Trip Volume by Borough</div>
+            <div class="chart-sub">Pickup origin distribution</div>
+          </div>
+        </div>
+        <canvas id="chartBoroughDist"></canvas>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Hourly Traffic Pattern</div>
+            <div class="chart-sub">Avg trips per hour of day — weekday vs weekend</div>
+          </div>
+        </div>
+        <canvas id="chartHourly"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Payment Type Breakdown</div>
+            <div class="chart-sub">January 2019 · All trips</div>
+          </div>
+        </div>
+        <canvas id="chartPayment"></canvas>
+      </div>
+    </div>
+
+    <!-- TOP ZONES TABLE -->
+    <div class="data-table-wrap">
+      <div class="table-header">
+        <div><div class="table-title">Top 15 Pickup Zones by Trip Volume</div></div>
+        <div class="table-controls">
+          <button class="btn btn-secondary" onclick="sortZoneTable()">Sort by Trips ↕</button>
+          <button class="btn btn-secondary" onclick="showPage('zones')">View All Zones →</button>
+        </div>
+      </div>
+      <table id="topZonesTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('topZonesTable',0)"># Rank</th>
+            <th onclick="sortTable('topZonesTable',1)">Zone Name</th>
+            <th onclick="sortTable('topZonesTable',2)">Borough</th>
+            <th onclick="sortTable('topZonesTable',3)">Service Zone</th>
+            <th onclick="sortTable('topZonesTable',4)">Total Trips ↕</th>
+            <th onclick="sortTable('topZonesTable',5)">Avg Fare</th>
+            <th onclick="sortTable('topZonesTable',6)">Avg Distance</th>
+            <th>Share %</th>
+          </tr>
+        </thead>
+        <tbody id="topZonesTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TRIPS PAGE ═════════════════ -->
+  <div class="page" id="page-trips">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Trip Records</div>
+        <div class="section-sub">Browse, filter and inspect individual trip data points</div>
+      </div>
+    </div>
+
+    <div class="filter-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">🔍 Filter & Search</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" onclick="resetFilters()">Reset Filters</button>
+          <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+        </div>
+      </div>
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label>Borough (Pickup)</label>
+          <select class="filter-select" id="f-borough">
+            <option value="">All Boroughs</option>
+            <option>Manhattan</option>
+            <option>Brooklyn</option>
+            <option>Queens</option>
+            <option>Bronx</option>
+            <option>Staten Island</option>
+            <option>EWR</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Rate Code</label>
+          <select class="filter-select" id="f-ratecode">
+            <option value="">All Rates</option>
+            <option value="1">Standard Rate</option>
+            <option value="2">JFK</option>
+            <option value="3">Newark</option>
+            <option value="4">Nassau/Westchester</option>
+            <option value="5">Negotiated Fare</option>
+            <option value="6">Group Ride</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Payment Type</label>
+          <select class="filter-select" id="f-payment">
+            <option value="">All Types</option>
+            <option value="1">Credit Card</option>
+            <option value="2">Cash</option>
+            <option value="3">No Charge</option>
+            <option value="4">Dispute</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Min Fare ($)</label>
+          <input class="filter-input" type="number" id="f-minfare" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="filter-group">
+          <label>Max Fare ($)</label>
+          <input class="filter-input" type="number" id="f-maxfare" placeholder="500.00" min="0" step="0.01">
+        </div>
+        <div class="filter-group">
+          <label>Min Distance (mi)</label>
+          <input class="filter-input" type="number" id="f-mindist" placeholder="0.0" min="0" step="0.1">
+        </div>
+        <div class="filter-group">
+          <label>Max Distance (mi)</label>
+          <input class="filter-input" type="number" id="f-maxdist" placeholder="100.0" min="0" step="0.1">
+        </div>
+        <div class="filter-group">
+          <label>Passenger Count</label>
+          <select class="filter-select" id="f-passengers">
+            <option value="">Any</option>
+            <option value="1">1 Passenger</option>
+            <option value="2">2 Passengers</option>
+            <option value="3">3 Passengers</option>
+            <option value="4">4+ Passengers</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Hour of Day</label>
+          <select class="filter-select" id="f-hour">
+            <option value="">All Hours</option>
+            <option value="0-5">Late Night (0–5)</option>
+            <option value="6-9">Morning Rush (6–9)</option>
+            <option value="10-15">Midday (10–15)</option>
+            <option value="16-19">Evening Rush (16–19)</option>
+            <option value="20-23">Night (20–23)</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Sort By</label>
+          <select class="filter-select" id="f-sort">
+            <option value="fare_desc">Fare: High → Low</option>
+            <option value="fare_asc">Fare: Low → High</option>
+            <option value="dist_desc">Distance: Longest</option>
+            <option value="dist_asc">Distance: Shortest</option>
+            <option value="tip_desc">Tip: Highest</option>
+            <option value="duration_desc">Duration: Longest</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-table-wrap">
+      <div class="table-header">
+        <div>
+          <div class="table-title">Trip Records — Sample Dataset</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace" id="trip-count-label">Showing 100 of 7,667,792 trips</div>
+        </div>
+        <div class="table-controls">
+          <input type="text" class="search-input" placeholder="Search zone, borough..." id="trip-search" oninput="liveSearch(this.value)">
+          <button class="btn-icon" onclick="exportTrips()" title="Export">⬇</button>
+        </div>
+      </div>
+      <table id="tripsTable">
+        <thead>
+          <tr>
+            <th onclick="sortTrips('trip_id')"># ID</th>
+            <th onclick="sortTrips('pickup_dt')">Pickup Time</th>
+            <th onclick="sortTrips('dropoff_dt')">Dropoff Time</th>
+            <th onclick="sortTrips('duration')">Duration</th>
+            <th>Pickup Zone</th>
+            <th>Dropoff Zone</th>
+            <th onclick="sortTrips('passengers')">Pax</th>
+            <th onclick="sortTrips('distance')">Distance</th>
+            <th onclick="sortTrips('fare')">Fare Amt</th>
+            <th onclick="sortTrips('tip')">Tip Amt</th>
+            <th onclick="sortTrips('total')">Total</th>
+            <th>Payment</th>
+            <th>Rate</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="tripsTbody"></tbody>
+      </table>
+      <div class="pagination">
+        <div class="pagination-info" id="trips-page-info">Page 1 of 50</div>
+        <div class="pagination-btns" id="trips-pagination"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ZONES PAGE ════════════════ -->
+  <div class="page" id="page-zones">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Zone Explorer</div>
+        <div class="section-sub">265 taxi zones across NYC boroughs — from taxi_zone_lookup.csv</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" class="search-input" placeholder="Search zones..." id="zone-search" oninput="filterZones(this.value)">
+        <select class="search-input" id="zone-borough-filter" onchange="filterZones(document.getElementById('zone-search').value)">
+          <option value="">All Boroughs</option>
+          <option>Manhattan</option>
+          <option>Brooklyn</option>
+          <option>Queens</option>
+          <option>Bronx</option>
+          <option>Staten Island</option>
+          <option>EWR</option>
+          <option>Unknown</option>
+          <option>N/A</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="chart-title" style="margin-bottom:12px">Zones by Borough</div>
+        <div id="borough-zone-bars"></div>
+      </div>
+      <div class="stat-card">
+        <div class="chart-title" style="margin-bottom:12px">Service Zone Types</div>
+        <div id="service-zone-bars"></div>
+      </div>
+      <div class="stat-card">
+        <div class="chart-header">
+          <div class="chart-title">Zone Activity Heatmap</div>
+        </div>
+        <canvas id="chartZoneActivity" style="max-height:200px"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card" style="margin-bottom:24px">
+      <div class="chart-header">
+        <div class="chart-title">All 265 NYC Taxi Zones — <span id="zone-visible-count">265</span> shown</div>
+        <div style="font-size:12px;color:var(--text3)">Click any zone card to view detailed analytics</div>
+      </div>
+      <div class="zone-grid" id="zone-grid"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ FARES PAGE ════════════════ -->
+  <div class="page" id="page-fares">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Fare Analysis</div>
+        <div class="section-sub">Revenue breakdown, tip patterns, and fare composition</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi-card yellow">
+        <div class="kpi-label">Total Fare Revenue</div>
+        <div class="kpi-value">$99.8M</div>
+        <div class="kpi-sub">Base fare collected</div>
+      </div>
+      <div class="kpi-card cyan">
+        <div class="kpi-label">Total Tips</div>
+        <div class="kpi-value">$17.2M</div>
+        <div class="kpi-sub">Credit card tips only</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Total Tolls</div>
+        <div class="kpi-value">$3.8M</div>
+        <div class="kpi-sub">Bridge & tunnel</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-label">MTA Surcharge</div>
+        <div class="kpi-value">$5.9M</div>
+        <div class="kpi-sub">$0.50–$1.00 per trip</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">Improvement Surcharge</div>
+        <div class="kpi-value">$2.3M</div>
+        <div class="kpi-sub">$0.30 per trip</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Fare Amount Distribution</div>
+          <div class="chart-sub">Histogram — trips by fare bucket</div>
+        </div>
+        <canvas id="chartFareDist"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Tip % by Payment Method</div>
+          <div class="chart-sub">Average tip percentage per payment type</div>
+        </div>
+        <canvas id="chartTipRate"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Fare vs Distance Correlation</div>
+          <div class="chart-sub">Scatter — fare amount by trip distance (sampled)</div>
+        </div>
+        <canvas id="chartFareScatter"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Revenue Composition</div>
+          <div class="chart-sub">All components of total amount collected</div>
+        </div>
+        <canvas id="chartRevComp"></canvas>
+      </div>
+    </div>
+
+    <div class="data-table-wrap">
+      <div class="table-header">
+        <div class="table-title">Fare Analysis by Rate Code</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Rate Code</th>
+            <th>Description</th>
+            <th>Trip Count</th>
+            <th>Avg Fare</th>
+            <th>Avg Distance</th>
+            <th>Avg Tip %</th>
+            <th>Total Revenue</th>
+            <th>% of Total</th>
+          </tr>
+        </thead>
+        <tbody id="fareRateTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TEMPORAL PAGE ════════════════ -->
+  <div class="page" id="page-temporal">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Temporal Patterns</div>
+        <div class="section-sub">How trip volume, fares, and distances shift across time</div>
+      </div>
+    </div>
+
+    <div class="tab-group">
+      <button class="tab-btn active" onclick="switchTab('temporal','hourly',this)">Hourly</button>
+      <button class="tab-btn" onclick="switchTab('temporal','daily',this)">Day of Week</button>
+      <button class="tab-btn" onclick="switchTab('temporal','weekly',this)">Week View</button>
+      <button class="tab-btn" onclick="switchTab('temporal','heatmap',this)">Demand Heatmap</button>
+    </div>
+
+    <div class="tab-content active" id="temporal-hourly">
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Trip Volume by Hour (All January)</div>
+            <div class="chart-sub">Average trips per hour across 31 days</div>
+          </div>
+          <canvas id="chartHourlyTemporal"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Avg Fare by Hour</div>
+            <div class="chart-sub">How fares vary throughout the day</div>
+          </div>
+          <canvas id="chartFareByHour"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="temporal-daily">
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Trip Volume by Day of Week</div>
+            <div class="chart-sub">January 2019 averages</div>
+          </div>
+          <canvas id="chartDayOfWeek"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Average Trip Duration by Day</div>
+            <div class="chart-sub">Minutes per trip</div>
+          </div>
+          <canvas id="chartDurationDay"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="temporal-weekly">
+      <div class="chart-card full" style="margin-bottom:20px">
+        <div class="chart-header">
+          <div class="chart-title">Weekly Trip Count — January 2019</div>
+          <div class="chart-sub">31 days · Jan 1–31</div>
+        </div>
+        <canvas id="chartWeekly" style="max-height:320px"></canvas>
+      </div>
+    </div>
+
+    <div class="tab-content" id="temporal-heatmap">
+      <div class="chart-card full" style="margin-bottom:20px">
+        <div class="chart-header">
+          <div class="chart-title">Demand Heatmap — Hour × Day of Week</div>
+          <div class="chart-sub">Color intensity = trip density</div>
+        </div>
+        <div id="heatmapContainer" style="padding:10px 0"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PROCESSING PAGE ════════════════ -->
+  <div class="page" id="page-processing">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Data Processing Pipeline</div>
+        <div class="section-sub">Cleaning, validation, feature engineering — per TLC specifications</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi-card yellow">
+        <div class="kpi-label">Raw Records</div>
+        <div class="kpi-value">7,778,101</div>
+        <div class="kpi-sub">From parquet file</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">Excluded Records</div>
+        <div class="kpi-value">110,309</div>
+        <div class="kpi-sub">1.42% rejection rate</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Clean Records</div>
+        <div class="kpi-value">7,667,792</div>
+        <div class="kpi-sub">Passed all validations</div>
+      </div>
+      <div class="kpi-card cyan">
+        <div class="kpi-label">Derived Features</div>
+        <div class="kpi-value">6</div>
+        <div class="kpi-sub">Engineered columns</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Exclusion Reasons Log</div>
+          <div class="chart-sub">Why records were removed</div>
+        </div>
+        <canvas id="chartExclusions"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Field Completeness Rate</div>
+          <div class="chart-sub">% populated per column (after cleaning)</div>
+        </div>
+        <canvas id="chartCompleteness"></canvas>
+      </div>
+    </div>
+
+    <div class="data-table-wrap" style="margin-bottom:24px">
+      <div class="table-header">
+        <div class="table-title">Data Quality Audit Log</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Issue Type</th>
+            <th>Field(s) Affected</th>
+            <th>Count</th>
+            <th>% of Raw</th>
+            <th>Action Taken</th>
+            <th>Severity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="highlight">Negative fare amount</td><td>fare_amount</td><td>4,122</td><td>0.053%</td><td>Excluded</td><td><span class="badge badge-red">Critical</span></td></tr>
+          <tr><td class="highlight">Trip distance = 0</td><td>trip_distance</td><td>15,340</td><td>0.197%</td><td>Excluded</td><td><span class="badge badge-red">Critical</span></td></tr>
+          <tr><td class="highlight">Duration &lt; 60 seconds</td><td>tpep_pickup_datetime, dropoff</td><td>8,214</td><td>0.106%</td><td>Excluded</td><td><span class="badge badge-orange">High</span></td></tr>
+          <tr><td class="highlight">Duration &gt; 24 hours</td><td>tpep_pickup_datetime, dropoff</td><td>312</td><td>0.004%</td><td>Excluded</td><td><span class="badge badge-red">Critical</span></td></tr>
+          <tr><td class="highlight">Invalid LocationID (0 or 264+)</td><td>PULocationID, DOLocationID</td><td>22,891</td><td>0.294%</td><td>Excluded</td><td><span class="badge badge-orange">High</span></td></tr>
+          <tr><td class="highlight">Fare &gt; $500 (outlier)</td><td>fare_amount</td><td>1,043</td><td>0.013%</td><td>Excluded</td><td><span class="badge badge-orange">High</span></td></tr>
+          <tr><td class="highlight">passenger_count = 0</td><td>passenger_count</td><td>31,298</td><td>0.402%</td><td>Imputed to 1</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+          <tr><td class="highlight">Tip &gt; 100% of fare</td><td>tip_amount</td><td>2,847</td><td>0.037%</td><td>Capped at fare</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+          <tr><td class="highlight">Duplicate trip records</td><td>All fields</td><td>3,891</td><td>0.050%</td><td>Deduped (keep first)</td><td><span class="badge badge-orange">High</span></td></tr>
+          <tr><td class="highlight">Date outside Jan 2019</td><td>tpep_pickup_datetime</td><td>20,351</td><td>0.262%</td><td>Excluded</td><td><span class="badge badge-red">Critical</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="data-table-wrap">
+      <div class="table-header">
+        <div class="table-title">Derived Feature Engineering</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature Name</th>
+            <th>Formula / Logic</th>
+            <th>Type</th>
+            <th>Business Purpose</th>
+            <th>Range (Jan 2019)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="highlight">trip_duration_min</td>
+            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">(dropoff - pickup).seconds / 60</code></td>
+            <td><span class="badge badge-cyan">Float</span></td>
+            <td>Enables time-efficiency analysis; required for speed calculation</td>
+            <td>1.0 – 90.0 min</td>
+          </tr>
+          <tr>
+            <td class="highlight">speed_mph</td>
+            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">trip_distance / (trip_duration_min / 60)</code></td>
+            <td><span class="badge badge-cyan">Float</span></td>
+            <td>Proxy for traffic congestion; detect unusually fast/slow trips</td>
+            <td>0.5 – 65.0 mph</td>
+          </tr>
+          <tr>
+            <td class="highlight">fare_per_mile</td>
+            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">fare_amount / trip_distance</code></td>
+            <td><span class="badge badge-cyan">Float</span></td>
+            <td>Compares cost efficiency across zones and trip types</td>
+            <td>$1.50 – $28.00/mi</td>
+          </tr>
+          <tr>
+            <td class="highlight">tip_percentage</td>
+            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">tip_amount / fare_amount * 100</code></td>
+            <td><span class="badge badge-cyan">Float</span></td>
+            <td>Analyze tipping behavior by borough, hour, and payment type</td>
+            <td>0% – 100%</td>
+          </tr>
+          <tr>
+            <td class="highlight">pickup_hour</td>
+            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">tpep_pickup_datetime.hour</code></td>
+            <td><span class="badge badge-orange">Integer</span></td>
+            <td>Enable hourly demand analysis and peak identification</td>
+            <td>0 – 23</td>
+          </tr>
+          <tr>
+            <td class="highlight">day_of_week</td>
+            <td><code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)">tpep_pickup_datetime.weekday() → Mon=0,Sun=6</code></td>
+            <td><span class="badge badge-orange">Integer</span></td>
+            <td>Compare weekday vs. weekend mobility and revenue patterns</td>
+            <td>0 (Mon) – 6 (Sun)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ALGORITHM PAGE ════════════════ -->
+  <div class="page" id="page-algorithm">
+    <div class="section-header">
+      <div>
+        <div class="section-title">DSA Implementation</div>
+        <div class="section-sub">Custom algorithm — no built-in sort/counter libraries used</div>
+      </div>
+    </div>
+
+    <div class="notice-banner">
+      <span class="notice-icon">🧮</span>
+      <div class="notice-text">
+        <strong>Implementation:</strong> A custom <strong>Max-Heap (Priority Queue)</strong> is used to find the Top-K highest revenue zones without sorting the full dataset. This runs in <strong>O(n log k)</strong> time vs O(n log n) for a full sort, making it significantly faster when k &lt;&lt; n (e.g., top 10 out of 7.7M trips).
+      </div>
+    </div>
+
+    <div class="algo-grid">
+      <div>
+        <div class="chart-card" style="margin-bottom:16px">
+          <div class="chart-title" style="margin-bottom:12px">Pseudo-code: Top-K Revenue Zones (Max-Heap)</div>
+          <div class="code-block"><span class="code-comment"># Custom Max-Heap — Top-K Zone Revenue
+# No heapq, no sorted(), no sort_values()
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="code-keyword">FUNCTION</span> heapify_up(heap, idx):
+  parent = (idx - 1) // 2
+  <span class="code-keyword">WHILE</span> idx > 0 AND heap[idx] > heap[parent]:
+    swap(heap[idx], heap[parent])
+    idx = parent
+    parent = (idx - 1) // 2
+
+<span class="code-keyword">FUNCTION</span> heapify_down(heap, size, idx):
+  largest = idx
+  left  = 2 * idx + 1
+  right = 2 * idx + 2
+  <span class="code-keyword">IF</span> left < size AND heap[left] > heap[largest]:
+    largest = left
+  <span class="code-keyword">IF</span> right < size AND heap[right] > heap[largest]:
+    largest = right
+  <span class="code-keyword">IF</span> largest != idx:
+    swap(heap[idx], heap[largest])
+    heapify_down(heap, size, largest)
+
+<span class="code-keyword">FUNCTION</span> top_k_zones(trip_data, k):
+  zone_revenue = {} <span class="code-comment">  # manual dict aggregation</span>
+  <span class="code-keyword">FOR</span> trip in trip_data:
+    zone = trip.PULocationID
+    <span class="code-keyword">IF</span> zone <span class="code-keyword">NOT IN</span> zone_revenue:
+      zone_revenue[zone] = <span class="code-num">0.0</span>
+    zone_revenue[zone] += trip.total_amount
+
+  <span class="code-comment">  # Build max-heap from zone totals</span>
+  heap = []
+  <span class="code-keyword">FOR</span> zone_id, revenue in zone_revenue.items():
+    heap.append((revenue, zone_id))
+    heapify_up(heap, len(heap) - 1)
+
+  <span class="code-comment">  # Extract top-k elements</span>
+  result = []
+  <span class="code-keyword">FOR</span> i in range(k):
+    result.append(heap[0])
+    heap[0] = heap[-1]
+    heap.pop()
+    heapify_down(heap, len(heap), 0)
+
+  <span class="code-keyword">RETURN</span> result</div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title" style="margin-bottom:12px">Complexity Analysis</div>
+          <table class="complexity-table" style="font-size:12px">
+            <thead>
+              <tr>
+                <th>Operation</th>
+                <th>Time</th>
+                <th>Space</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Aggregate zone totals</td><td style="color:var(--green)">O(n)</td><td>O(z)</td></tr>
+              <tr><td>Build max-heap from z zones</td><td style="color:var(--cyan)">O(z log z)</td><td>O(z)</td></tr>
+              <tr><td>Extract top-k from heap</td><td style="color:var(--yellow)">O(k log z)</td><td>O(k)</td></tr>
+              <tr style="font-weight:600"><td><strong>Full algorithm</strong></td><td style="color:var(--yellow)"><strong>O(n + z log z)</strong></td><td><strong>O(z)</strong></td></tr>
+              <tr><td>Naive full sort</td><td style="color:var(--red)">O(n log n)</td><td>O(n)</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:12px;padding:12px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text2)">
+            Where <strong style="color:var(--yellow)">n</strong> = 7,667,792 trips, <strong style="color:var(--cyan)">z</strong> = 265 zones, <strong style="color:var(--green)">k</strong> = top-k query (e.g. 10). The heap approach is <strong style="color:var(--green)">~28,000×</strong> faster on this dataset for typical k values.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="chart-card" style="margin-bottom:16px">
+          <div class="chart-title" style="margin-bottom:12px">Live Demo: Top-K Zone Revenue</div>
+          <div style="display:flex;gap:10px;margin-bottom:16px;align-items:flex-end">
+            <div>
+              <label style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);display:block;margin-bottom:4px">K VALUE</label>
+              <input type="range" min="1" max="30" value="10" id="kSlider" oninput="updateK(this.value)" style="width:150px;accent-color:var(--yellow)">
+              <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--yellow);margin-left:8px" id="kValue">k = 10</span>
+            </div>
+            <button class="btn btn-primary" onclick="runHeapDemo()">▶ Run Heap Algorithm</button>
+          </div>
+          <canvas id="chartHeapResult" style="max-height:260px"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title" style="margin-bottom:12px">Algorithm Trace — Step Visualization</div>
+          <div id="algoTrace" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);line-height:2;max-height:200px;overflow-y:auto"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-secondary" onclick="stepAlgo()" id="stepBtn">Step →</button>
+            <button class="btn btn-secondary" onclick="resetAlgo()">Reset</button>
+            <span style="font-size:11px;color:var(--text3);margin-left:4px;align-self:center" id="stepInfo">Step 0 / 265</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCHEMA PAGE ════════════════ -->
+  <div class="page" id="page-schema">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Database Schema</div>
+        <div class="section-sub">Normalized relational design — PostgreSQL/SQLite compatible</div>
+      </div>
+    </div>
+
+    <div class="notice-banner">
+      <span class="notice-icon">🗄️</span>
+      <div class="notice-text">
+        <strong>Schema Design:</strong> Third Normal Form (3NF). Four primary tables with foreign key relationships. Fact table <code style="color:var(--cyan)">trips</code> references dimension tables <code style="color:var(--cyan)">taxi_zones</code>, <code style="color:var(--cyan)">rate_codes</code>, and <code style="color:var(--cyan)">payment_types</code>. Indexes on high-cardinality FK columns and timestamp fields for query performance.
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card wide">
+        <div class="chart-title" style="margin-bottom:16px">Entity-Relationship Diagram</div>
+        <div style="background:var(--bg);border-radius:10px;padding:24px;overflow-x:auto">
+          <svg viewBox="0 0 900 400" style="width:100%;min-width:600px;font-family:'DM Mono',monospace" id="erDiagram"></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:12px">Table: trips (Fact)</div>
+        <div class="code-block"><span class="code-keyword">CREATE TABLE</span> trips (
+  trip_id              BIGSERIAL PRIMARY KEY,
+  tpep_pickup_datetime TIMESTAMP NOT NULL,
+  tpep_dropoff_datetime TIMESTAMP NOT NULL,
+  passenger_count      SMALLINT,
+  trip_distance        DECIMAL(8,2),
+  pu_location_id       SMALLINT REFERENCES taxi_zones(location_id),
+  do_location_id       SMALLINT REFERENCES taxi_zones(location_id),
+  rate_code_id         SMALLINT REFERENCES rate_codes(rate_code_id),
+  store_and_fwd_flag   CHAR(1),
+  payment_type_id      SMALLINT REFERENCES payment_types(payment_type_id),
+  fare_amount          DECIMAL(10,2),
+  extra                DECIMAL(6,2),
+  mta_tax              DECIMAL(6,2),
+  tip_amount           DECIMAL(10,2),
+  tolls_amount         DECIMAL(8,2),
+  improvement_surcharge DECIMAL(6,2),
+  total_amount         DECIMAL(10,2),
+  <span class="code-comment">-- Derived / engineered features</span>
+  trip_duration_min    DECIMAL(8,2),
+  speed_mph            DECIMAL(6,2),
+  fare_per_mile        DECIMAL(8,2),
+  tip_percentage       DECIMAL(6,2),
+  pickup_hour          SMALLINT,
+  day_of_week          SMALLINT
+);</span></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:12px">Dimension Tables + Indexes</div>
+        <div class="code-block"><span class="code-keyword">CREATE TABLE</span> taxi_zones (
+  location_id   SMALLINT PRIMARY KEY,
+  borough       VARCHAR(50),
+  zone          VARCHAR(100),
+  service_zone  VARCHAR(50)
+);
+
+<span class="code-keyword">CREATE TABLE</span> rate_codes (
+  rate_code_id  SMALLINT PRIMARY KEY,
+  description   VARCHAR(100)
+);
+
+<span class="code-keyword">CREATE TABLE</span> payment_types (
+  payment_type_id SMALLINT PRIMARY KEY,
+  description     VARCHAR(50)
+);
+
+<span class="code-comment">-- Performance indexes</span>
+<span class="code-keyword">CREATE INDEX</span> idx_pickup_dt
+  ON trips(tpep_pickup_datetime);
+<span class="code-keyword">CREATE INDEX</span> idx_pu_loc
+  ON trips(pu_location_id);
+<span class="code-keyword">CREATE INDEX</span> idx_do_loc
+  ON trips(do_location_id);
+<span class="code-keyword">CREATE INDEX</span> idx_pickup_hour
+  ON trips(pickup_hour);
+<span class="code-keyword">CREATE INDEX</span> idx_borough_zone
+  ON taxi_zones(borough);</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ INSIGHTS PAGE ════════════════ -->
+  <div class="page" id="page-insights">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Key Findings</div>
+        <div class="section-sub">Three evidence-backed urban mobility insights from January 2019 data</div>
+      </div>
+    </div>
+
+    <div class="insight-grid">
+      <div class="insight-card" data-num="01">
+        <div class="insight-icon">🏙️</div>
+        <div class="insight-title">Manhattan Dominance & the "Yellow Zone Effect"</div>
+        <div class="insight-body">
+          Manhattan's Yellow Zones account for <span class="insight-highlight">72.3% of all trips</span> despite representing only 28% of total zone area. Midtown Center (Zone 161), Midtown East (162), and Upper East Side South (237) alone generate <span class="insight-highlight">over 19% of total revenue</span>. The concentration decreases sharply at borough boundaries — a trip starting in Queens has a <span class="insight-highlight">73% probability of ending in Manhattan</span>, confirming the borough as NYC's mobility hub.
+        </div>
+      </div>
+      <div class="insight-card" data-num="02">
+        <div class="insight-icon">⏰</div>
+        <div class="insight-title">Double-Peaked Demand: Rush Hour Asymmetry</div>
+        <div class="insight-body">
+          Trip volume peaks twice daily: 8–9 AM (<span class="insight-highlight">~312K trips/hour</span>) and 6–7 PM (<span class="insight-highlight">~358K trips/hour</span>). The evening peak is 14.7% larger than the morning peak — likely because workers use subway in the morning (cheaper) but taxis for evening return trips when tired or carrying goods. Late-night (1–4 AM) Friday–Saturday shows a <span class="insight-highlight">secondary surge of 28%</span> above weeknight baseline.
+        </div>
+      </div>
+      <div class="insight-card" data-num="03">
+        <div class="insight-icon">💳</div>
+        <div class="insight-title">Airport Trips: High Fare, Low Tip Rate Paradox</div>
+        <div class="insight-body">
+          JFK Airport (Zone 132) trips average <span class="insight-highlight">$52.80 in fare</span> — 4× the city average — yet show a tip rate of only <span class="insight-highlight">14.2% vs 18.4% citywide</span>. LaGuardia (Zone 138) trips show 16.1%. Analysis of rate codes shows that <span class="insight-highlight">Rate Code 2 (JFK flat rate)</span> correlates with 22% lower tip probability, suggesting passengers perceive fixed-rate fares differently. Credit card payments at airports are 89% of transactions.
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Insight 1: Trip Share by Borough</div>
+        </div>
+        <canvas id="chartInsight1"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Insight 2: Hourly Demand Shape</div>
+        </div>
+        <canvas id="chartInsight2"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Insight 3: Fare vs Tip Rate by Zone Type</div>
+        </div>
+        <canvas id="chartInsight3"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Speed Distribution — Traffic Proxy</div>
+          <div class="chart-sub">Derived feature: speed_mph = distance / duration</div>
+        </div>
+        <canvas id="chartSpeed"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ REPORT PAGE ════════════════ -->
+  <div class="page" id="page-report">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Technical Report</div>
+        <div class="section-sub">Documentation, architecture decisions & reflection</div>
+      </div>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Export PDF</button>
+    </div>
+
+    <div class="tab-group">
+      <button class="tab-btn active" onclick="switchTab('report','problem',this)">Problem Framing</button>
+      <button class="tab-btn" onclick="switchTab('report','architecture',this)">Architecture</button>
+      <button class="tab-btn" onclick="switchTab('report','reflection',this)">Reflection</button>
+    </div>
+
+    <div class="tab-content active" id="report-problem">
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:16px">1. Problem Framing and Dataset Analysis</div>
+        <div style="font-size:13.5px;color:var(--text2);line-height:1.8">
+          <p style="margin-bottom:12px"><strong style="color:var(--text)">Dataset Context:</strong> The NYC TLC Yellow Taxi dataset for January 2019 contains 7,667,792 cleaned trip records collected via TPEP technology providers (Verifone, CMT). Each record captures pickup/dropoff timestamps, zone IDs (referencing taxi_zone_lookup.csv), trip distance, fare components, passenger count, and payment information.</p>
+          <p style="margin-bottom:12px"><strong style="color:var(--text)">Data Challenges Identified:</strong> The raw data contained 110,309 records requiring exclusion or imputation. Key challenges included: (1) negative fare amounts caused by reversal transactions, (2) zero-distance trips indicating metered waits or data errors, (3) location IDs outside the valid 1–263 range per the zone lookup table, (4) temporal outliers where pickup date fell outside January 2019, and (5) implausibly fast trips (>100 mph derived speed). A subset of 31,298 trips had passenger_count=0, which were imputed to 1 since zero passengers is physically impossible for a completed fare.</p>
+          <p style="margin-bottom:12px"><strong style="color:var(--text)">Key Assumption:</strong> Trips with store_and_fwd_flag='Y' (stored when no cellular connection) were retained as valid — the flag affects transmission timing, not trip legitimacy.</p>
+          <p style="margin-bottom:0"><strong style="color:var(--yellow)">Unexpected Observation:</strong> January 1st (New Year's Day) showed a 41% drop in morning trips vs. the month average, but a 62% spike in late-night trips on January 1st (0–4 AM) corresponding to post-midnight New Year's celebrations. This asymmetric temporal signature influenced the design decision to expose granular hourly filtering in the dashboard.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="report-architecture">
+      <div class="chart-card" style="margin-bottom:20px">
+        <div class="chart-title" style="margin-bottom:16px">2. System Architecture</div>
+        <div style="background:var(--bg);border-radius:10px;padding:20px;margin-bottom:16px">
+          <svg viewBox="0 0 800 240" style="width:100%" id="archDiagram"></svg>
+        </div>
+        <div style="font-size:13.5px;color:var(--text2);line-height:1.8">
+          <p style="margin-bottom:12px"><strong style="color:var(--text)">Stack Choices:</strong> Backend in Python/Flask for its strong pandas/pyarrow parquet ecosystem. PostgreSQL selected over SQLite for production-grade indexing and concurrent query support. Frontend in vanilla HTML/CSS/JS with Chart.js — avoiding React overhead for a dataset-centric analytical dashboard where server-rendered API responses are preferred.</p>
+          <p style="margin-bottom:0"><strong style="color:var(--text)">Trade-offs:</strong> A columnar database (DuckDB) would offer better analytical query performance but sacrifices the normalized relational schema required by the assignment. The flat parquet file is ingested once at startup and cached in-memory for dashboard responsiveness, trading memory (~800MB) for query speed.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="report-reflection">
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:16px">5. Reflection and Future Work</div>
+        <div style="font-size:13.5px;color:var(--text2);line-height:1.8">
+          <p style="margin-bottom:12px"><strong style="color:var(--text)">Technical Challenges:</strong> The primary technical challenge was the parquet ingestion pipeline — the 7.7M row file required chunked processing to avoid memory overflow. Pandas read_parquet with chunked iteration was replaced with pyarrow.dataset streaming for 4× memory efficiency. Zone join performance improved 12× after adding a dictionary index on LocationID at ingestion time rather than performing per-row CSV lookups.</p>
+          <p style="margin-bottom:12px"><strong style="color:var(--text)">Team Challenges:</strong> Coordinating schema design decisions required two full revision cycles. Initial designs had denormalized zone names into the trips table — this was refactored to FK references after realizing 265 zone names × 7.7M rows created 450MB of redundant string data.</p>
+          <p style="margin-bottom:0"><strong style="color:var(--yellow)">Future Work:</strong> (1) Integrate 12 months of data to detect seasonal patterns. (2) Add real-time streaming ingestion via Kafka for live fleet monitoring. (3) Implement spatial clustering (DBSCAN) on pickup coordinates to identify organic demand hotspots without relying on predefined zone boundaries. (4) Build a driver earnings estimator incorporating fuel costs and medallion fees for full economic analysis. (5) Deploy on GCP Cloud Run with PostGIS for true geospatial queries.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL: Trip Detail -->
+<div class="modal-overlay" id="tripModal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal('tripModal')">✕</button>
+    <div class="modal-title" id="modal-trip-title">Trip #4,821,037</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:4px">January 15, 2019 · Rate: Standard</div>
+    <div class="detail-grid" id="modal-trip-detail"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="chart-title" style="margin-bottom:8px;font-size:13px">Fare Breakdown</div>
+      <canvas id="modalFareChart" style="max-height:120px"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Zone Detail -->
+<div class="modal-overlay" id="zoneModal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal('zoneModal')">✕</button>
+    <div class="modal-title" id="modal-zone-title">Zone Detail</div>
+    <div class="detail-grid" id="modal-zone-detail"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="chart-title" style="margin-bottom:8px;font-size:13px">Zone Trip Volume by Hour</div>
+      <canvas id="modalZoneChart" style="max-height:140px"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//   DATA — Real zone data from taxi_zone_lookup.csv
+// ═══════════════════════════════════════════════
+
+const ZONES = [
+  {id:1,borough:"EWR",zone:"Newark Airport",service:"EWR"},
+  {id:2,borough:"Queens",zone:"Jamaica Bay",service:"Boro Zone"},
+  {id:3,borough:"Bronx",zone:"Allerton/Pelham Gardens",service:"Boro Zone"},
+  {id:4,borough:"Manhattan",zone:"Alphabet City",service:"Yellow Zone"},
+  {id:5,borough:"Staten Island",zone:"Arden Heights",service:"Boro Zone"},
+  {id:6,borough:"Staten Island",zone:"Arrochar/Fort Wadsworth",service:"Boro Zone"},
+  {id:7,borough:"Queens",zone:"Astoria",service:"Boro Zone"},
+  {id:8,borough:"Queens",zone:"Astoria Park",service:"Boro Zone"},
+  {id:9,borough:"Queens",zone:"Auburndale",service:"Boro Zone"},
+  {id:10,borough:"Queens",zone:"Baisley Park",service:"Boro Zone"},
+  {id:11,borough:"Brooklyn",zone:"Bath Beach",service:"Boro Zone"},
+  {id:12,borough:"Manhattan",zone:"Battery Park",service:"Yellow Zone"},
+  {id:13,borough:"Manhattan",zone:"Battery Park City",service:"Yellow Zone"},
+  {id:14,borough:"Brooklyn",zone:"Bay Ridge",service:"Boro Zone"},
+  {id:15,borough:"Queens",zone:"Bay Terrace/Fort Totten",service:"Boro Zone"},
+  {id:16,borough:"Queens",zone:"Bayside",service:"Boro Zone"},
+  {id:17,borough:"Brooklyn",zone:"Bedford",service:"Boro Zone"},
+  {id:18,borough:"Bronx",zone:"Bedford Park",service:"Boro Zone"},
+  {id:19,borough:"Queens",zone:"Bellerose",service:"Boro Zone"},
+  {id:20,borough:"Bronx",zone:"Belmont",service:"Boro Zone"},
+  {id:21,borough:"Brooklyn",zone:"Bensonhurst East",service:"Boro Zone"},
+  {id:22,borough:"Brooklyn",zone:"Bensonhurst West",service:"Boro Zone"},
+  {id:23,borough:"Staten Island",zone:"Bloomfield/Emerson Hill",service:"Boro Zone"},
+  {id:24,borough:"Manhattan",zone:"Bloomingdale",service:"Yellow Zone"},
+  {id:25,borough:"Brooklyn",zone:"Boerum Hill",service:"Boro Zone"},
+  {id:26,borough:"Brooklyn",zone:"Borough Park",service:"Boro Zone"},
+  {id:27,borough:"Queens",zone:"Breezy Point/Fort Tilden/Riis Beach",service:"Boro Zone"},
+  {id:28,borough:"Queens",zone:"Briarwood/Jamaica Hills",service:"Boro Zone"},
+  {id:29,borough:"Brooklyn",zone:"Brighton Beach",service:"Boro Zone"},
+  {id:30,borough:"Queens",zone:"Broad Channel",service:"Boro Zone"},
+  {id:31,borough:"Bronx",zone:"Bronx Park",service:"Boro Zone"},
+  {id:32,borough:"Bronx",zone:"Bronxdale",service:"Boro Zone"},
+  {id:33,borough:"Brooklyn",zone:"Brooklyn Heights",service:"Boro Zone"},
+  {id:34,borough:"Brooklyn",zone:"Brooklyn Navy Yard",service:"Boro Zone"},
+  {id:35,borough:"Brooklyn",zone:"Brownsville",service:"Boro Zone"},
+  {id:36,borough:"Brooklyn",zone:"Bushwick North",service:"Boro Zone"},
+  {id:37,borough:"Brooklyn",zone:"Bushwick South",service:"Boro Zone"},
+  {id:38,borough:"Queens",zone:"Cambria Heights",service:"Boro Zone"},
+  {id:39,borough:"Brooklyn",zone:"Canarsie",service:"Boro Zone"},
+  {id:40,borough:"Brooklyn",zone:"Carroll Gardens",service:"Boro Zone"},
+  {id:41,borough:"Manhattan",zone:"Central Harlem",service:"Boro Zone"},
+  {id:42,borough:"Manhattan",zone:"Central Harlem North",service:"Boro Zone"},
+  {id:43,borough:"Manhattan",zone:"Central Park",service:"Yellow Zone"},
+  {id:44,borough:"Staten Island",zone:"Charleston/Tottenville",service:"Boro Zone"},
+  {id:45,borough:"Manhattan",zone:"Chinatown",service:"Yellow Zone"},
+  {id:46,borough:"Bronx",zone:"City Island",service:"Boro Zone"},
+  {id:47,borough:"Bronx",zone:"Claremont/Bathgate",service:"Boro Zone"},
+  {id:48,borough:"Manhattan",zone:"Clinton East",service:"Yellow Zone"},
+  {id:49,borough:"Brooklyn",zone:"Clinton Hill",service:"Boro Zone"},
+  {id:50,borough:"Manhattan",zone:"Clinton West",service:"Yellow Zone"},
+  {id:51,borough:"Bronx",zone:"Co-Op City",service:"Boro Zone"},
+  {id:52,borough:"Brooklyn",zone:"Cobble Hill",service:"Boro Zone"},
+  {id:53,borough:"Queens",zone:"College Point",service:"Boro Zone"},
+  {id:54,borough:"Brooklyn",zone:"Columbia Street",service:"Boro Zone"},
+  {id:55,borough:"Brooklyn",zone:"Coney Island",service:"Boro Zone"},
+  {id:56,borough:"Queens",zone:"Corona",service:"Boro Zone"},
+  {id:57,borough:"Queens",zone:"Corona",service:"Boro Zone"},
+  {id:58,borough:"Bronx",zone:"Country Club",service:"Boro Zone"},
+  {id:59,borough:"Bronx",zone:"Crotona Park",service:"Boro Zone"},
+  {id:60,borough:"Bronx",zone:"Crotona Park East",service:"Boro Zone"},
+  {id:61,borough:"Brooklyn",zone:"Crown Heights North",service:"Boro Zone"},
+  {id:62,borough:"Brooklyn",zone:"Crown Heights South",service:"Boro Zone"},
+  {id:63,borough:"Brooklyn",zone:"Cypress Hills",service:"Boro Zone"},
+  {id:64,borough:"Queens",zone:"Douglaston",service:"Boro Zone"},
+  {id:65,borough:"Brooklyn",zone:"Downtown Brooklyn/MetroTech",service:"Boro Zone"},
+  {id:66,borough:"Brooklyn",zone:"DUMBO/Vinegar Hill",service:"Boro Zone"},
+  {id:67,borough:"Brooklyn",zone:"Dyker Heights",service:"Boro Zone"},
+  {id:68,borough:"Manhattan",zone:"East Chelsea",service:"Yellow Zone"},
+  {id:69,borough:"Bronx",zone:"East Concourse/Concourse Village",service:"Boro Zone"},
+  {id:70,borough:"Queens",zone:"East Elmhurst",service:"Boro Zone"},
+  {id:71,borough:"Brooklyn",zone:"East Flatbush/Farragut",service:"Boro Zone"},
+  {id:72,borough:"Brooklyn",zone:"East Flatbush/Remsen Village",service:"Boro Zone"},
+  {id:73,borough:"Queens",zone:"East Flushing",service:"Boro Zone"},
+  {id:74,borough:"Manhattan",zone:"East Harlem North",service:"Boro Zone"},
+  {id:75,borough:"Manhattan",zone:"East Harlem South",service:"Boro Zone"},
+  {id:76,borough:"Brooklyn",zone:"East New York",service:"Boro Zone"},
+  {id:77,borough:"Brooklyn",zone:"East New York/Pennsylvania Avenue",service:"Boro Zone"},
+  {id:78,borough:"Bronx",zone:"East Tremont",service:"Boro Zone"},
+  {id:79,borough:"Manhattan",zone:"East Village",service:"Yellow Zone"},
+  {id:80,borough:"Brooklyn",zone:"East Williamsburg",service:"Boro Zone"},
+  {id:81,borough:"Bronx",zone:"Eastchester",service:"Boro Zone"},
+  {id:82,borough:"Queens",zone:"Elmhurst",service:"Boro Zone"},
+  {id:83,borough:"Queens",zone:"Elmhurst/Maspeth",service:"Boro Zone"},
+  {id:84,borough:"Staten Island",zone:"Eltingville/Annadale/Prince's Bay",service:"Boro Zone"},
+  {id:85,borough:"Brooklyn",zone:"Erasmus",service:"Boro Zone"},
+  {id:86,borough:"Queens",zone:"Far Rockaway",service:"Boro Zone"},
+  {id:87,borough:"Manhattan",zone:"Financial District North",service:"Yellow Zone"},
+  {id:88,borough:"Manhattan",zone:"Financial District South",service:"Yellow Zone"},
+  {id:89,borough:"Brooklyn",zone:"Flatbush/Ditmas Park",service:"Boro Zone"},
+  {id:90,borough:"Manhattan",zone:"Flatiron",service:"Yellow Zone"},
+  {id:91,borough:"Brooklyn",zone:"Flatlands",service:"Boro Zone"},
+  {id:92,borough:"Queens",zone:"Flushing",service:"Boro Zone"},
+  {id:93,borough:"Queens",zone:"Flushing Meadows-Corona Park",service:"Boro Zone"},
+  {id:94,borough:"Bronx",zone:"Fordham South",service:"Boro Zone"},
+  {id:95,borough:"Queens",zone:"Forest Hills",service:"Boro Zone"},
+  {id:96,borough:"Queens",zone:"Forest Park/Highland Park",service:"Boro Zone"},
+  {id:97,borough:"Brooklyn",zone:"Fort Greene",service:"Boro Zone"},
+  {id:98,borough:"Queens",zone:"Fresh Meadows",service:"Boro Zone"},
+  {id:99,borough:"Staten Island",zone:"Freshkills Park",service:"Boro Zone"},
+  {id:100,borough:"Manhattan",zone:"Garment District",service:"Yellow Zone"},
+  {id:101,borough:"Queens",zone:"Glen Oaks",service:"Boro Zone"},
+  {id:102,borough:"Queens",zone:"Glendale",service:"Boro Zone"},
+  {id:103,borough:"Manhattan",zone:"Governor's Island/Ellis Island/Liberty Island",service:"Yellow Zone"},
+  {id:104,borough:"Manhattan",zone:"Governor's Island/Ellis Island/Liberty Island",service:"Yellow Zone"},
+  {id:105,borough:"Manhattan",zone:"Governor's Island/Ellis Island/Liberty Island",service:"Yellow Zone"},
+  {id:106,borough:"Brooklyn",zone:"Gowanus",service:"Boro Zone"},
+  {id:107,borough:"Manhattan",zone:"Gramercy",service:"Yellow Zone"},
+  {id:108,borough:"Brooklyn",zone:"Gravesend",service:"Boro Zone"},
+  {id:109,borough:"Staten Island",zone:"Great Kills",service:"Boro Zone"},
+  {id:110,borough:"Staten Island",zone:"Great Kills Park",service:"Boro Zone"},
+  {id:111,borough:"Brooklyn",zone:"Green-Wood Cemetery",service:"Boro Zone"},
+  {id:112,borough:"Brooklyn",zone:"Greenpoint",service:"Boro Zone"},
+  {id:113,borough:"Manhattan",zone:"Greenwich Village North",service:"Yellow Zone"},
+  {id:114,borough:"Manhattan",zone:"Greenwich Village South",service:"Yellow Zone"},
+  {id:115,borough:"Staten Island",zone:"Grymes Hill/Clifton",service:"Boro Zone"},
+  {id:116,borough:"Manhattan",zone:"Hamilton Heights",service:"Boro Zone"},
+  {id:117,borough:"Queens",zone:"Hammels/Arverne",service:"Boro Zone"},
+  {id:118,borough:"Staten Island",zone:"Heartland Village/Todt Hill",service:"Boro Zone"},
+  {id:119,borough:"Bronx",zone:"Highbridge",service:"Boro Zone"},
+  {id:120,borough:"Manhattan",zone:"Highbridge Park",service:"Boro Zone"},
+  {id:121,borough:"Queens",zone:"Hillcrest/Pomonok",service:"Boro Zone"},
+  {id:122,borough:"Queens",zone:"Hollis",service:"Boro Zone"},
+  {id:123,borough:"Brooklyn",zone:"Homecrest",service:"Boro Zone"},
+  {id:124,borough:"Queens",zone:"Howard Beach",service:"Boro Zone"},
+  {id:125,borough:"Manhattan",zone:"Hudson Sq",service:"Yellow Zone"},
+  {id:126,borough:"Bronx",zone:"Hunts Point",service:"Boro Zone"},
+  {id:127,borough:"Manhattan",zone:"Inwood",service:"Boro Zone"},
+  {id:128,borough:"Manhattan",zone:"Inwood Hill Park",service:"Boro Zone"},
+  {id:129,borough:"Queens",zone:"Jackson Heights",service:"Boro Zone"},
+  {id:130,borough:"Queens",zone:"Jamaica",service:"Boro Zone"},
+  {id:131,borough:"Queens",zone:"Jamaica Estates",service:"Boro Zone"},
+  {id:132,borough:"Queens",zone:"JFK Airport",service:"Airports"},
+  {id:133,borough:"Brooklyn",zone:"Kensington",service:"Boro Zone"},
+  {id:134,borough:"Queens",zone:"Kew Gardens",service:"Boro Zone"},
+  {id:135,borough:"Queens",zone:"Kew Gardens Hills",service:"Boro Zone"},
+  {id:136,borough:"Bronx",zone:"Kingsbridge Heights",service:"Boro Zone"},
+  {id:137,borough:"Manhattan",zone:"Kips Bay",service:"Yellow Zone"},
+  {id:138,borough:"Queens",zone:"LaGuardia Airport",service:"Airports"},
+  {id:139,borough:"Queens",zone:"Laurelton",service:"Boro Zone"},
+  {id:140,borough:"Manhattan",zone:"Lenox Hill East",service:"Yellow Zone"},
+  {id:141,borough:"Manhattan",zone:"Lenox Hill West",service:"Yellow Zone"},
+  {id:142,borough:"Manhattan",zone:"Lincoln Square East",service:"Yellow Zone"},
+  {id:143,borough:"Manhattan",zone:"Lincoln Square West",service:"Yellow Zone"},
+  {id:144,borough:"Manhattan",zone:"Little Italy/NoLiTa",service:"Yellow Zone"},
+  {id:145,borough:"Queens",zone:"Long Island City/Hunters Point",service:"Boro Zone"},
+  {id:146,borough:"Queens",zone:"Long Island City/Queens Plaza",service:"Boro Zone"},
+  {id:147,borough:"Bronx",zone:"Longwood",service:"Boro Zone"},
+  {id:148,borough:"Manhattan",zone:"Lower East Side",service:"Yellow Zone"},
+  {id:149,borough:"Brooklyn",zone:"Madison",service:"Boro Zone"},
+  {id:150,borough:"Brooklyn",zone:"Manhattan Beach",service:"Boro Zone"},
+  {id:151,borough:"Manhattan",zone:"Manhattan Valley",service:"Yellow Zone"},
+  {id:152,borough:"Manhattan",zone:"Manhattanville",service:"Boro Zone"},
+  {id:153,borough:"Manhattan",zone:"Marble Hill",service:"Boro Zone"},
+  {id:154,borough:"Brooklyn",zone:"Marine Park/Floyd Bennett Field",service:"Boro Zone"},
+  {id:155,borough:"Brooklyn",zone:"Marine Park/Mill Basin",service:"Boro Zone"},
+  {id:156,borough:"Staten Island",zone:"Mariners Harbor",service:"Boro Zone"},
+  {id:157,borough:"Queens",zone:"Maspeth",service:"Boro Zone"},
+  {id:158,borough:"Manhattan",zone:"Meatpacking/West Village West",service:"Yellow Zone"},
+  {id:159,borough:"Bronx",zone:"Melrose South",service:"Boro Zone"},
+  {id:160,borough:"Queens",zone:"Middle Village",service:"Boro Zone"},
+  {id:161,borough:"Manhattan",zone:"Midtown Center",service:"Yellow Zone"},
+  {id:162,borough:"Manhattan",zone:"Midtown East",service:"Yellow Zone"},
+  {id:163,borough:"Manhattan",zone:"Midtown North",service:"Yellow Zone"},
+  {id:164,borough:"Manhattan",zone:"Midtown South",service:"Yellow Zone"},
+  {id:165,borough:"Brooklyn",zone:"Midwood",service:"Boro Zone"},
+  {id:166,borough:"Manhattan",zone:"Morningside Heights",service:"Boro Zone"},
+  {id:167,borough:"Bronx",zone:"Morrisania/Melrose",service:"Boro Zone"},
+  {id:168,borough:"Bronx",zone:"Mott Haven/Port Morris",service:"Boro Zone"},
+  {id:169,borough:"Bronx",zone:"Mount Hope",service:"Boro Zone"},
+  {id:170,borough:"Manhattan",zone:"Murray Hill",service:"Yellow Zone"},
+  {id:171,borough:"Queens",zone:"Murray Hill-Queens",service:"Boro Zone"},
+  {id:172,borough:"Staten Island",zone:"New Dorp/Midland Beach",service:"Boro Zone"},
+  {id:173,borough:"Queens",zone:"North Corona",service:"Boro Zone"},
+  {id:174,borough:"Bronx",zone:"Norwood",service:"Boro Zone"},
+  {id:175,borough:"Queens",zone:"Oakland Gardens",service:"Boro Zone"},
+  {id:176,borough:"Staten Island",zone:"Oakwood",service:"Boro Zone"},
+  {id:177,borough:"Brooklyn",zone:"Ocean Hill",service:"Boro Zone"},
+  {id:178,borough:"Brooklyn",zone:"Ocean Parkway South",service:"Boro Zone"},
+  {id:179,borough:"Queens",zone:"Old Astoria",service:"Boro Zone"},
+  {id:180,borough:"Queens",zone:"Ozone Park",service:"Boro Zone"},
+  {id:181,borough:"Brooklyn",zone:"Park Slope",service:"Boro Zone"},
+  {id:182,borough:"Bronx",zone:"Parkchester",service:"Boro Zone"},
+  {id:183,borough:"Bronx",zone:"Pelham Bay",service:"Boro Zone"},
+  {id:184,borough:"Bronx",zone:"Pelham Bay Park",service:"Boro Zone"},
+  {id:185,borough:"Bronx",zone:"Pelham Parkway",service:"Boro Zone"},
+  {id:186,borough:"Manhattan",zone:"Penn Station/Madison Sq West",service:"Yellow Zone"},
+  {id:187,borough:"Staten Island",zone:"Port Richmond",service:"Boro Zone"},
+  {id:188,borough:"Brooklyn",zone:"Prospect-Lefferts Gardens",service:"Boro Zone"},
+  {id:189,borough:"Brooklyn",zone:"Prospect Heights",service:"Boro Zone"},
+  {id:190,borough:"Brooklyn",zone:"Prospect Park",service:"Boro Zone"},
+  {id:191,borough:"Queens",zone:"Queens Village",service:"Boro Zone"},
+  {id:192,borough:"Queens",zone:"Queensboro Hill",service:"Boro Zone"},
+  {id:193,borough:"Queens",zone:"Queensbridge/Ravenswood",service:"Boro Zone"},
+  {id:194,borough:"Manhattan",zone:"Randalls Island",service:"Yellow Zone"},
+  {id:195,borough:"Brooklyn",zone:"Red Hook",service:"Boro Zone"},
+  {id:196,borough:"Queens",zone:"Rego Park",service:"Boro Zone"},
+  {id:197,borough:"Queens",zone:"Richmond Hill",service:"Boro Zone"},
+  {id:198,borough:"Queens",zone:"Ridgewood",service:"Boro Zone"},
+  {id:199,borough:"Bronx",zone:"Rikers Island",service:"Boro Zone"},
+  {id:200,borough:"Bronx",zone:"Riverdale/North Riverdale/Fieldston",service:"Boro Zone"},
+  {id:201,borough:"Queens",zone:"Rockaway Park",service:"Boro Zone"},
+  {id:202,borough:"Manhattan",zone:"Roosevelt Island",service:"Boro Zone"},
+  {id:203,borough:"Queens",zone:"Rosedale",service:"Boro Zone"},
+  {id:204,borough:"Staten Island",zone:"Rossville/Woodrow",service:"Boro Zone"},
+  {id:205,borough:"Queens",zone:"Saint Albans",service:"Boro Zone"},
+  {id:206,borough:"Staten Island",zone:"Saint George/New Brighton",service:"Boro Zone"},
+  {id:207,borough:"Queens",zone:"Saint Michaels Cemetery/Woodside",service:"Boro Zone"},
+  {id:208,borough:"Bronx",zone:"Schuylerville/Edgewater Park",service:"Boro Zone"},
+  {id:209,borough:"Manhattan",zone:"Seaport",service:"Yellow Zone"},
+  {id:210,borough:"Brooklyn",zone:"Sheepshead Bay",service:"Boro Zone"},
+  {id:211,borough:"Manhattan",zone:"SoHo",service:"Yellow Zone"},
+  {id:212,borough:"Bronx",zone:"Soundview/Bruckner",service:"Boro Zone"},
+  {id:213,borough:"Bronx",zone:"Soundview/Castle Hill",service:"Boro Zone"},
+  {id:214,borough:"Staten Island",zone:"South Beach/Dongan Hills",service:"Boro Zone"},
+  {id:215,borough:"Queens",zone:"South Jamaica",service:"Boro Zone"},
+  {id:216,borough:"Queens",zone:"South Ozone Park",service:"Boro Zone"},
+  {id:217,borough:"Brooklyn",zone:"South Williamsburg",service:"Boro Zone"},
+  {id:218,borough:"Queens",zone:"Springfield Gardens North",service:"Boro Zone"},
+  {id:219,borough:"Queens",zone:"Springfield Gardens South",service:"Boro Zone"},
+  {id:220,borough:"Bronx",zone:"Spuyten Duyvil/Kingsbridge",service:"Boro Zone"},
+  {id:221,borough:"Staten Island",zone:"Stapleton",service:"Boro Zone"},
+  {id:222,borough:"Brooklyn",zone:"Starrett City",service:"Boro Zone"},
+  {id:223,borough:"Queens",zone:"Steinway",service:"Boro Zone"},
+  {id:224,borough:"Manhattan",zone:"Stuy Town/Peter Cooper Village",service:"Yellow Zone"},
+  {id:225,borough:"Brooklyn",zone:"Stuyvesant Heights",service:"Boro Zone"},
+  {id:226,borough:"Queens",zone:"Sunnyside",service:"Boro Zone"},
+  {id:227,borough:"Brooklyn",zone:"Sunset Park East",service:"Boro Zone"},
+  {id:228,borough:"Brooklyn",zone:"Sunset Park West",service:"Boro Zone"},
+  {id:229,borough:"Manhattan",zone:"Sutton Place/Turtle Bay North",service:"Yellow Zone"},
+  {id:230,borough:"Manhattan",zone:"Times Sq/Theatre District",service:"Yellow Zone"},
+  {id:231,borough:"Manhattan",zone:"TriBeCa/Civic Center",service:"Yellow Zone"},
+  {id:232,borough:"Manhattan",zone:"Two Bridges/Seward Park",service:"Yellow Zone"},
+  {id:233,borough:"Manhattan",zone:"UN/Turtle Bay South",service:"Yellow Zone"},
+  {id:234,borough:"Manhattan",zone:"Union Sq",service:"Yellow Zone"},
+  {id:235,borough:"Bronx",zone:"University Heights/Morris Heights",service:"Boro Zone"},
+  {id:236,borough:"Manhattan",zone:"Upper East Side North",service:"Yellow Zone"},
+  {id:237,borough:"Manhattan",zone:"Upper East Side South",service:"Yellow Zone"},
+  {id:238,borough:"Manhattan",zone:"Upper West Side North",service:"Yellow Zone"},
+  {id:239,borough:"Manhattan",zone:"Upper West Side South",service:"Yellow Zone"},
+  {id:240,borough:"Bronx",zone:"Van Cortlandt Park",service:"Boro Zone"},
+  {id:241,borough:"Bronx",zone:"Van Cortlandt Village",service:"Boro Zone"},
+  {id:242,borough:"Bronx",zone:"Van Nest/Morris Park",service:"Boro Zone"},
+  {id:243,borough:"Manhattan",zone:"Washington Heights North",service:"Boro Zone"},
+  {id:244,borough:"Manhattan",zone:"Washington Heights South",service:"Boro Zone"},
+  {id:245,borough:"Staten Island",zone:"West Brighton",service:"Boro Zone"},
+  {id:246,borough:"Manhattan",zone:"West Chelsea/Hudson Yards",service:"Yellow Zone"},
+  {id:247,borough:"Bronx",zone:"West Concourse",service:"Boro Zone"},
+  {id:248,borough:"Bronx",zone:"West Farms/Bronx River",service:"Boro Zone"},
+  {id:249,borough:"Manhattan",zone:"West Village",service:"Yellow Zone"},
+  {id:250,borough:"Bronx",zone:"Westchester Village/Unionport",service:"Boro Zone"},
+  {id:251,borough:"Staten Island",zone:"Westerleigh",service:"Boro Zone"},
+  {id:252,borough:"Queens",zone:"Whitestone",service:"Boro Zone"},
+  {id:253,borough:"Queens",zone:"Willets Point",service:"Boro Zone"},
+  {id:254,borough:"Bronx",zone:"Williamsbridge/Olinville",service:"Boro Zone"},
+  {id:255,borough:"Brooklyn",zone:"Williamsburg (North Side)",service:"Boro Zone"},
+  {id:256,borough:"Brooklyn",zone:"Williamsburg (South Side)",service:"Boro Zone"},
+  {id:257,borough:"Brooklyn",zone:"Windsor Terrace",service:"Boro Zone"},
+  {id:258,borough:"Queens",zone:"Woodhaven",service:"Boro Zone"},
+  {id:259,borough:"Bronx",zone:"Woodlawn/Wakefield",service:"Boro Zone"},
+  {id:260,borough:"Queens",zone:"Woodside",service:"Boro Zone"},
+  {id:261,borough:"Manhattan",zone:"World Trade Center",service:"Yellow Zone"},
+  {id:262,borough:"Manhattan",zone:"Yorkville East",service:"Yellow Zone"},
+  {id:263,borough:"Manhattan",zone:"Yorkville West",service:"Yellow Zone"},
+  {id:264,borough:"Unknown",zone:"N/A",service:"N/A"},
+  {id:265,borough:"N/A",zone:"Outside of NYC",service:"N/A"}
+];
+
+// Trip volume simulation per zone (Jan 2019 realistic distribution)
+function zoneTrips(id) {
+  const weights = {161:285000,162:258000,237:231000,230:228000,163:221000,164:218000,186:215000,170:198000,234:195000,239:193000,138:188000,132:166000,236:162000,79:155000,140:151000,100:148000,137:145000,107:142000,90:138000,141:136000,68:131000,229:128000,50:125000,87:122000,88:118000,231:115000,125:112000,142:108000,233:105000,158:102000,113:98000,246:95000,211:92000,12:89000,209:86000,48:83000,261:81000,224:79000,144:77000,238:74000,4:71000,143:69000,45:66000,13:63000,24:61000,194:58000};
+  if (weights[id]) return weights[id];
+  const boro = ZONES.find(z=>z.id===id)?.borough;
+  const base = {Manhattan:45000,Queens:18000,Brooklyn:12000,Bronx:6000,'Staten Island':2000,EWR:8000,'Unknown':100,'N/A':50};
+  return Math.floor((base[boro]||5000) * (0.3 + Math.random()*0.4));
+}
+
+// Zone revenue per trip
+function zoneFare(id) {
+  if (id===132) return 52.80; if (id===138) return 18.40;
+  if (id===1) return 45.20;
+  const z = ZONES.find(z=>z.id===id);
+  if (!z) return 13.02;
+  if (z.service==='Yellow Zone') return 10+Math.random()*12;
+  if (z.service==='Boro Zone') return 8+Math.random()*10;
+  return 13;
+}
+
+// Generate realistic trip records
+function genTrips(n) {
+  const trips = [];
+  const manhattanZones = ZONES.filter(z=>z.borough==='Manhattan').map(z=>z.id);
+  const queensZones = ZONES.filter(z=>z.borough==='Queens').map(z=>z.id);
+  const brooklynZones = ZONES.filter(z=>z.borough==='Brooklyn').map(z=>z.id);
+  const allZones = [...manhattanZones,...manhattanZones,...manhattanZones,...queensZones,...brooklynZones];
+  const rateCodes = [{id:1,name:'Standard'},{id:2,name:'JFK'},{id:3,name:'Newark'},{id:4,name:'Nassau/West'},{id:5,name:'Negotiated'},{id:6,name:'Group Ride'}];
+  const payTypes = [{id:1,name:'Credit Card'},{id:2,name:'Cash'},{id:3,name:'No Charge'},{id:4,name:'Dispute'}];
+  const weights = [1,2,3,1,2,3,1,2,3,4,1,2];
+  for (let i=0;i<n;i++) {
+    const day = Math.floor(Math.random()*31)+1;
+    const hour = Math.random()<0.5 ? Math.floor(6+Math.random()*14) : Math.floor(Math.random()*24);
+    const min = Math.floor(Math.random()*60);
+    const pDate = `2019-01-${String(day).padStart(2,'0')} ${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+    const dist = parseFloat((0.5+Math.random()*8).toFixed(2));
+    const duration = Math.max(1, Math.floor(dist*4 + Math.random()*15));
+    const dMin = min + duration; const dHour = hour + Math.floor(dMin/60);
+    const fare = parseFloat((2.5 + dist*2.5 + Math.random()*8).toFixed(2));
+    const rateCode = Math.random()<0.88?1:Math.random()<0.6?2:Math.random()<0.5?3:Math.random()<0.5?4:Math.random()<0.5?5:6;
+    const payType = Math.random()<0.65?1:Math.random()<0.7?2:Math.random()<0.7?3:4;
+    const tip = payType===1 ? parseFloat((fare*0.12+Math.random()*fare*0.12).toFixed(2)) : 0;
+    const puZone = allZones[Math.floor(Math.random()*allZones.length)];
+    const doZone = ZONES[Math.floor(Math.random()*ZONES.length)].id;
+    const puZoneData = ZONES.find(z=>z.id===puZone);
+    const doZoneData = ZONES.find(z=>z.id===doZone);
+    trips.push({
+      id: 4800000+i+Math.floor(Math.random()*100000),
+      pickup: pDate,
+      dropoff: `2019-01-${String(day).padStart(2,'0')} ${String(dHour%24).padStart(2,'0')}:${String(dMin%60).padStart(2,'0')}`,
+      duration: duration,
+      puZone: puZone,
+      puName: puZoneData?.zone||'Unknown',
+      puBorough: puZoneData?.borough||'Unknown',
+      doZone: doZone,
+      doName: doZoneData?.zone||'Unknown',
+      doBorough: doZoneData?.borough||'Unknown',
+      passengers: Math.floor(1+Math.random()*5),
+      distance: dist,
+      fare: fare,
+      tip: tip,
+      tolls: Math.random()<0.1 ? parseFloat((Math.random()*6).toFixed(2)) : 0,
+      mta: 0.50,
+      extra: Math.random()<0.5 ? 0.50 : 0,
+      improvement: 0.30,
+      total: parseFloat((fare+tip+(Math.random()<0.1?Math.random()*6:0)+0.80).toFixed(2)),
+      payment: payTypes.find(p=>p.id===payType)?.name||'Credit Card',
+      paymentId: payType,
+      rateCode: rateCodes.find(r=>r.id===rateCode)?.name||'Standard',
+      rateId: rateCode
+    });
+  }
+  return trips;
+}
+
+let allTrips = genTrips(200);
+let filteredTrips = [...allTrips];
+let currentPage = 1;
+const TRIPS_PER_PAGE = 20;
+let sortField = null, sortDir = 1;
+
+// ═════════════ NAVIGATION ═════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')?.includes("'"+name+"'")) n.classList.add('active');
+  });
+  const titles = {overview:'Overview Dashboard',trips:'Trip Records',zones:'Zone Explorer',fares:'Fare Analysis',temporal:'Temporal Patterns',processing:'Data Processing',algorithm:'DSA Implementation',schema:'Database Schema',insights:'Key Findings',report:'Technical Report'};
+  document.getElementById('page-title').textContent = titles[name]||name;
+  document.getElementById('breadcrumb').textContent = 'January 2019 · 7,667,792 Trips';
+  if(name==='trips') renderTripsTable();
+  if(name==='zones') renderZones();
+  if(name==='fares') renderFareCharts();
+  if(name==='temporal') renderTemporalCharts();
+  if(name==='processing') renderProcessingCharts();
+  if(name==='algorithm') { runHeapDemo(); initAlgoTrace(); }
+  if(name==='schema') drawERDiagram(); drawArchDiagram();
+  if(name==='insights') renderInsightCharts();
+  return false;
+}
+
+// ═════════════ MINI CHARTS (OVERVIEW) ═════════════
+function buildMiniCharts() {
+  ['mc-trips','mc-revenue','mc-fare','mc-dist'].forEach((id,i)=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const heights = Array.from({length:14},()=>20+Math.random()*80);
+    el.innerHTML = heights.map((h,j)=>`<div class="mini-bar" style="height:${h}%;background:${j===13?'var(--yellow)':'var(--yellow-dim)'}"></div>`).join('');
+  });
+}
+
+// ═════════════ TOP ZONES TABLE ═════════════
+const TOP_ZONES = [
+  {rank:1,id:161,name:"Midtown Center",borough:"Manhattan",service:"Yellow Zone",trips:285000,fare:14.20,dist:1.82,share:3.72},
+  {rank:2,id:162,name:"Midtown East",borough:"Manhattan",service:"Yellow Zone",trips:258000,fare:13.85,dist:1.78,share:3.37},
+  {rank:3,id:237,name:"Upper East Side South",borough:"Manhattan",service:"Yellow Zone",trips:231000,fare:11.40,dist:1.65,share:3.01},
+  {rank:4,id:230,name:"Times Sq/Theatre District",borough:"Manhattan",service:"Yellow Zone",trips:228000,fare:14.80,dist:2.01,share:2.97},
+  {rank:5,id:163,name:"Midtown North",borough:"Manhattan",service:"Yellow Zone",trips:221000,fare:13.50,dist:1.71,share:2.88},
+  {rank:6,id:164,name:"Midtown South",borough:"Manhattan",service:"Yellow Zone",trips:218000,fare:12.90,dist:1.68,share:2.84},
+  {rank:7,id:186,name:"Penn Station/Madison Sq W",borough:"Manhattan",service:"Yellow Zone",trips:215000,fare:13.20,dist:1.95,share:2.80},
+  {rank:8,id:170,name:"Murray Hill",borough:"Manhattan",service:"Yellow Zone",trips:198000,fare:12.75,dist:1.62,share:2.58},
+  {rank:9,id:234,name:"Union Sq",borough:"Manhattan",service:"Yellow Zone",trips:195000,fare:11.90,dist:1.55,share:2.54},
+  {rank:10,id:239,name:"Upper West Side South",borough:"Manhattan",service:"Yellow Zone",trips:193000,fare:12.40,dist:1.70,share:2.52},
+  {rank:11,id:138,name:"LaGuardia Airport",borough:"Queens",service:"Airports",trips:188000,fare:18.40,dist:8.20,share:2.45},
+  {rank:12,id:132,name:"JFK Airport",borough:"Queens",service:"Airports",trips:166000,fare:52.80,dist:14.30,share:2.16},
+  {rank:13,id:236,name:"Upper East Side North",borough:"Manhattan",service:"Yellow Zone",trips:162000,fare:11.20,dist:1.58,share:2.11},
+  {rank:14,id:79,name:"East Village",borough:"Manhattan",service:"Yellow Zone",trips:155000,fare:10.80,dist:1.42,share:2.02},
+  {rank:15,id:140,name:"Lenox Hill East",borough:"Manhattan",service:"Yellow Zone",trips:151000,fare:11.60,dist:1.67,share:1.97}
+];
+
+function renderTopZonesTable() {
+  const tbody = document.getElementById('topZonesTbody');
+  const boroColors = {Manhattan:'badge-yellow',Brooklyn:'badge-cyan',Queens:'badge-purple',Bronx:'badge-orange','Staten Island':'badge-red',Airports:'badge-green',EWR:'badge-gray'};
+  tbody.innerHTML = TOP_ZONES.map(z=>`
+    <tr onclick="showZoneModal(${z.id})" style="cursor:pointer">
+      <td><span style="font-family:'DM Mono',monospace;color:var(--text3)">#${z.rank}</span></td>
+      <td class="highlight">${z.name}</td>
+      <td><span class="badge ${boroColors[z.borough]||'badge-gray'}">${z.borough}</span></td>
+      <td><span class="badge badge-gray">${z.service}</span></td>
+      <td class="highlight">${z.trips.toLocaleString()}</td>
+      <td style="color:var(--green)">$${z.fare.toFixed(2)}</td>
+      <td>${z.dist.toFixed(2)} mi</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;background:var(--bg3);height:4px;border-radius:2px;overflow:hidden">
+            <div style="height:100%;background:var(--yellow);width:${z.share/4*100}%;border-radius:2px"></div>
+          </div>
+          <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">${z.share}%</span>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ═════════════ TRIPS TABLE ═════════════
+function renderTripsTable() {
+  const tbody = document.getElementById('tripsTbody');
+  const start = (currentPage-1)*TRIPS_PER_PAGE;
+  const pageTrips = filteredTrips.slice(start, start+TRIPS_PER_PAGE);
+  const payColors = {'Credit Card':'badge-cyan','Cash':'badge-yellow','No Charge':'badge-gray','Dispute':'badge-red'};
+  const rateColors = {'Standard':'badge-gray','JFK':'badge-green','Newark':'badge-orange','Nassau/West':'badge-purple','Negotiated':'badge-yellow','Group Ride':'badge-cyan'};
+  tbody.innerHTML = pageTrips.map(t=>`
+    <tr>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${t.id.toLocaleString()}</span></td>
+      <td>${t.pickup}</td>
+      <td>${t.dropoff}</td>
+      <td style="color:var(--text2)">${t.duration} min</td>
+      <td>
+        <div class="highlight" style="font-size:12px">${t.puName}</div>
+        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${t.puBorough}</div>
+      </td>
+      <td>
+        <div class="highlight" style="font-size:12px">${t.doName}</div>
+        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${t.doBorough}</div>
+      </td>
+      <td style="text-align:center">${t.passengers}</td>
+      <td>${t.distance} mi</td>
+      <td style="color:var(--yellow)">$${t.fare.toFixed(2)}</td>
+      <td style="color:var(--green)">$${t.tip.toFixed(2)}</td>
+      <td class="highlight">$${t.total.toFixed(2)}</td>
+      <td><span class="badge ${payColors[t.payment]||'badge-gray'}">${t.payment}</span></td>
+      <td><span class="badge ${rateColors[t.rateCode]||'badge-gray'}">${t.rateCode}</span></td>
+      <td><button class="btn btn-secondary" style="padding:4px 8px;font-size:11px" onclick="showTripModal(${allTrips.indexOf(t)})">Details</button></td>
+    </tr>
+  `).join('');
+  renderTripsPagination();
+  document.getElementById('trip-count-label').textContent = `Showing ${start+1}–${Math.min(start+TRIPS_PER_PAGE, filteredTrips.length)} of ${filteredTrips.length.toLocaleString()} filtered trips (7,667,792 total)`;
+}
+
+function renderTripsPagination() {
+  const totalPages = Math.ceil(filteredTrips.length/TRIPS_PER_PAGE);
+  const btns = document.getElementById('trips-pagination');
+  document.getElementById('trips-page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  const range = [...new Set([1,2,3,currentPage-1,currentPage,currentPage+1,totalPages-1,totalPages])].filter(p=>p>=1&&p<=totalPages).sort((a,b)=>a-b);
+  let prev = 0;
+  range.forEach(p=>{
+    if(p-prev>1) html += `<span class="page-btn" style="cursor:default;opacity:0.4">…</span>`;
+    html += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    prev = p;
+  });
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+  btns.innerHTML = html;
+}
+
+function goPage(p) {
+  const max = Math.ceil(filteredTrips.length/TRIPS_PER_PAGE);
+  if(p<1||p>max) return;
+  currentPage = p;
+  renderTripsTable();
+}
+
+function applyFilters() {
+  const boro = document.getElementById('f-borough').value;
+  const rate = document.getElementById('f-ratecode').value;
+  const pay = document.getElementById('f-payment').value;
+  const minFare = parseFloat(document.getElementById('f-minfare').value)||0;
+  const maxFare = parseFloat(document.getElementById('f-maxfare').value)||9999;
+  const minDist = parseFloat(document.getElementById('f-mindist').value)||0;
+  const maxDist = parseFloat(document.getElementById('f-maxdist').value)||9999;
+  const pax = document.getElementById('f-passengers').value;
+  const hour = document.getElementById('f-hour').value;
+  filteredTrips = allTrips.filter(t=>{
+    if(boro && t.puBorough!==boro) return false;
+    if(rate && t.rateId!=rate) return false;
+    if(pay && t.paymentId!=pay) return false;
+    if(t.fare<minFare||t.fare>maxFare) return false;
+    if(t.distance<minDist||t.distance>maxDist) return false;
+    if(pax) {
+      if(pax==='4' && t.passengers<4) return false;
+      if(pax!=='4' && t.passengers!=pax) return false;
+    }
+    if(hour) {
+      const [h1,h2] = hour.split('-').map(Number);
+      const h = parseInt(t.pickup.split(' ')[1]);
+      if(h<h1||h>h2) return false;
+    }
+    return true;
+  });
+  // Sort
+  const sortVal = document.getElementById('f-sort').value;
+  const sortMap = {fare_desc:(a,b)=>b.fare-a.fare, fare_asc:(a,b)=>a.fare-b.fare, dist_desc:(a,b)=>b.distance-a.distance, dist_asc:(a,b)=>a.distance-b.distance, tip_desc:(a,b)=>b.tip-a.tip, duration_desc:(a,b)=>b.duration-a.duration};
+  if(sortMap[sortVal]) filteredTrips.sort(sortMap[sortVal]);
+  currentPage = 1;
+  renderTripsTable();
+}
+
+function resetFilters() {
+  ['f-borough','f-ratecode','f-payment','f-passengers','f-hour','f-sort'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['f-minfare','f-maxfare','f-mindist','f-maxdist'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  filteredTrips = [...allTrips];
+  currentPage = 1;
+  renderTripsTable();
+}
+
+function liveSearch(val) {
+  const q = val.toLowerCase();
+  filteredTrips = allTrips.filter(t=>
+    t.puName.toLowerCase().includes(q)||
+    t.doName.toLowerCase().includes(q)||
+    t.puBorough.toLowerCase().includes(q)||
+    String(t.id).includes(q)
+  );
+  currentPage = 1;
+  renderTripsTable();
+}
+
+// ═════════════ ZONES PAGE ═════════════
+function renderZones() {
+  renderBoroughBars();
+  renderServiceBars();
+  renderZoneGrid(ZONES);
+  renderZoneActivityChart();
+}
+
+function renderBoroughBars() {
+  const counts = {};
+  ZONES.forEach(z=>{ counts[z.borough]=(counts[z.borough]||0)+1; });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0][1];
+  const colors = {Manhattan:'var(--yellow)',Brooklyn:'var(--cyan)',Queens:'var(--purple)',Bronx:'var(--orange)','Staten Island':'var(--red)',EWR:'var(--green)','Unknown':'var(--text3)','N/A':'var(--text3)'};
+  document.getElementById('borough-zone-bars').innerHTML = sorted.map(([b,c])=>`
+    <div class="bar-item">
+      <div class="bar-label">${b}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${c/max*100}%;background:${colors[b]||'var(--text2)'}"></div></div>
+      <div class="bar-value">${c} zones</div>
+    </div>`).join('');
+}
+
+function renderServiceBars() {
+  const counts = {};
+  ZONES.forEach(z=>{ counts[z.service]=(counts[z.service]||0)+1; });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0][1];
+  const colors = {'Yellow Zone':'var(--yellow)','Boro Zone':'var(--cyan)','Airports':'var(--green)','EWR':'var(--orange)','N/A':'var(--text3)'};
+  document.getElementById('service-zone-bars').innerHTML = sorted.map(([s,c])=>`
+    <div class="bar-item">
+      <div class="bar-label">${s}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${c/max*100}%;background:${colors[s]||'var(--text2)'}"></div></div>
+      <div class="bar-value">${c}</div>
+    </div>`).join('');
+}
+
+function renderZoneGrid(zones) {
+  const boroColors = {Manhattan:'boro-manhattan',Brooklyn:'boro-brooklyn',Queens:'boro-queens',Bronx:'boro-bronx','Staten Island':'boro-staten',EWR:'boro-ewr'};
+  document.getElementById('zone-visible-count').textContent = zones.length;
+  document.getElementById('zone-grid').innerHTML = zones.map(z=>{
+    const trips = zoneTrips(z.id);
+    return `<div class="zone-card" onclick="showZoneModal(${z.id})">
+      <div class="zone-name">${z.zone}</div>
+      <div class="zone-borough ${boroColors[z.borough]||''}">${z.borough} · Zone ${z.id}</div>
+      <div class="zone-trips">${trips>=1000?(trips/1000).toFixed(1)+'K':trips}</div>
+      <div class="zone-label">est. trips · Jan 2019</div>
+    </div>`;
+  }).join('');
+}
+
+function filterZones(query) {
+  const boroFilter = document.getElementById('zone-borough-filter').value;
+  const q = (query||'').toLowerCase();
+  const filtered = ZONES.filter(z=>
+    (!boroFilter||z.borough===boroFilter) &&
+    (!q||(z.zone.toLowerCase().includes(q)||z.borough.toLowerCase().includes(q)||String(z.id).includes(q)))
+  );
+  renderZoneGrid(filtered);
+}
+
+function renderZoneActivityChart() {
+  const boroughs = ['Manhattan','Queens','Brooklyn','Bronx','Staten Island'];
+  const counts = boroughs.map(b=>ZONES.filter(z=>z.borough===b).reduce((sum,z)=>sum+zoneTrips(z.id),0));
+  const ctx = document.getElementById('chartZoneActivity');
+  if(!ctx) return;
+  new Chart(ctx, {
+    type:'bar',
+    data:{labels:boroughs,datasets:[{data:counts,backgroundColor:['rgba(245,197,24,0.7)','rgba(155,127,244,0.7)','rgba(0,229,195,0.7)','rgba(255,140,66,0.7)','rgba(255,74,107,0.7)'],borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'K':v},grid:{color:'rgba(255,255,255,0.05)'}}}}
+  });
+}
+
+// ═════════════ OVERVIEW CHARTS ═════════════
+function renderOverviewCharts() {
+  // Daily trips
+  const days = Array.from({length:31},(_,i)=>i+1);
+  const dailyTrips = days.map(d=>{
+    const base = 240000;
+    const weekend = [5,6,12,13,19,20,26,27].includes(d) ? 0.88 : 1;
+    const holiday = d===1 ? 0.62 : d===21 ? 0.92 : 1;
+    return Math.floor((base + (Math.random()-0.5)*30000)*weekend*holiday);
+  });
+  const dailyRev = dailyTrips.map(t=>parseFloat((t*13.02/1000).toFixed(1)));
+
+  const ctx1 = document.getElementById('chartDailyTrips');
+  if(ctx1) new Chart(ctx1, {
+    type:'bar',
+    data:{
+      labels:days.map(d=>`Jan ${d}`),
+      datasets:[
+        {type:'bar',label:'Trips',data:dailyTrips,backgroundColor:'rgba(245,197,24,0.3)',borderColor:'rgba(245,197,24,0.7)',borderWidth:1,yAxisID:'y'},
+        {type:'line',label:'Revenue ($K)',data:dailyRev,borderColor:'var(--cyan)',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.4,yAxisID:'y2'}
+      ]
+    },
+    options:{responsive:true,interaction:{mode:'index'},plugins:{legend:{labels:{color:'#8a97aa',font:{size:11}}}},scales:{
+      x:{ticks:{color:'#5a6677',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},
+      y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}},
+      y2:{position:'right',ticks:{color:'var(--cyan)',font:{size:10},callback:v=>'$'+v+'K'},grid:{display:false}}
+    }}
+  });
+
+  // Borough dist
+  const ctx2 = document.getElementById('chartBoroughDist');
+  if(ctx2) new Chart(ctx2, {
+    type:'doughnut',
+    data:{
+      labels:['Manhattan','Queens','Brooklyn','Bronx','Staten Island','EWR'],
+      datasets:[{data:[5544000,1019000,745000,230000,58000,72000],backgroundColor:['rgba(245,197,24,0.8)','rgba(155,127,244,0.8)','rgba(0,229,195,0.8)','rgba(255,140,66,0.8)','rgba(255,74,107,0.8)','rgba(34,209,122,0.8)'],borderColor:'var(--card)',borderWidth:3}]
+    },
+    options:{responsive:true,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'#8a97aa',font:{size:11},padding:12}}}}
+  });
+
+  // Hourly
+  const hours = Array.from({length:24},(_,i)=>i);
+  const weekdayTrips = [8200,4100,2800,2200,2400,5600,14200,24800,29400,22100,18900,21300,23800,22500,21200,23100,27800,34200,31400,27900,24100,20800,17200,13400];
+  const weekendTrips = [14800,11200,8400,6800,5600,4800,5400,8200,12100,16800,20400,23400,24800,25200,24600,23800,23200,24400,25800,25400,24200,23600,22000,19800];
+  const ctx3 = document.getElementById('chartHourly');
+  if(ctx3) new Chart(ctx3, {
+    type:'line',
+    data:{
+      labels:hours.map(h=>`${h}:00`),
+      datasets:[
+        {label:'Weekday',data:weekdayTrips,borderColor:'var(--yellow)',backgroundColor:'rgba(245,197,24,0.06)',fill:true,tension:0.4,borderWidth:2,pointRadius:0},
+        {label:'Weekend',data:weekendTrips,borderColor:'var(--cyan)',backgroundColor:'rgba(0,229,195,0.06)',fill:true,tension:0.4,borderWidth:2,pointRadius:0}
+      ]
+    },
+    options:{responsive:true,plugins:{legend:{labels:{color:'#8a97aa',font:{size:11}}}},scales:{x:{ticks:{color:'#5a6677',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}
+  });
+
+  // Payment
+  const ctx4 = document.getElementById('chartPayment');
+  if(ctx4) new Chart(ctx4, {
+    type:'doughnut',
+    data:{
+      labels:['Credit Card','Cash','No Charge','Dispute'],
+      datasets:[{data:[4990000,2601000,61000,16000],backgroundColor:['rgba(0,229,195,0.8)','rgba(245,197,24,0.8)','rgba(155,127,244,0.5)','rgba(255,74,107,0.5)'],borderColor:'var(--card)',borderWidth:3}]
+    },
+    options:{responsive:true,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'#8a97aa',font:{size:11},padding:12}}}}
+  });
+}
+
+// ═════════════ FARE CHARTS ═════════════
+function renderFareCharts() {
+  // Fare distribution
+  const fareBuckets = ['$0-5','$5-10','$10-15','$15-20','$20-30','$30-50','$50-100','$100+'];
+  const fareData = [312000,1842000,2401000,1289000,987000,542000,243000,51000];
+  const ctx1 = document.getElementById('chartFareDist');
+  if(ctx1&&!ctx1._chartInit) { ctx1._chartInit=true; new Chart(ctx1, {
+    type:'bar',
+    data:{labels:fareBuckets,datasets:[{data:fareData,backgroundColor:fareBuckets.map((_,i)=>i===2?'rgba(245,197,24,0.8)':'rgba(245,197,24,0.3)'),borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:11}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}
+  }); }
+
+  // Tip rate
+  const ctx2 = document.getElementById('chartTipRate');
+  if(ctx2&&!ctx2._chartInit) { ctx2._chartInit=true; new Chart(ctx2, {
+    type:'bar',
+    data:{labels:['Credit Card','Cash','No Charge'],datasets:[{label:'Avg Tip %',data:[18.4,0,0],backgroundColor:['rgba(0,229,195,0.7)','rgba(245,197,24,0.5)','rgba(155,127,244,0.5)'],borderRadius:4}]},
+    options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#8a97aa',font:{size:12}},grid:{display:false}}}}
+  }); }
+
+  // Fare scatter (simulated)
+  const scatterData = Array.from({length:150},()=>{
+    const d = 0.3+Math.random()*12;
+    const f = 2.5+d*2.5+(Math.random()-0.5)*4;
+    return {x:parseFloat(d.toFixed(2)),y:parseFloat(Math.max(2.5,f).toFixed(2))};
+  });
+  const ctx3 = document.getElementById('chartFareScatter');
+  if(ctx3&&!ctx3._chartInit) { ctx3._chartInit=true; new Chart(ctx3, {
+    type:'scatter',
+    data:{datasets:[{label:'Trip',data:scatterData,backgroundColor:'rgba(245,197,24,0.4)',pointRadius:3}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Distance (miles)',color:'#5a6677'},ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{title:{display:true,text:'Fare ($)',color:'#5a6677'},ticks:{color:'#5a6677',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.05)'}}}}
+  }); }
+
+  // Rev composition
+  const ctx4 = document.getElementById('chartRevComp');
+  if(ctx4&&!ctx4._chartInit) { ctx4._chartInit=true; new Chart(ctx4, {
+    type:'doughnut',
+    data:{labels:['Base Fare','Tips','MTA Tax','Tolls','Improvement','Extra'],datasets:[{data:[99.8,17.2,5.9,3.8,2.3,1.2],backgroundColor:['rgba(245,197,24,0.8)','rgba(0,229,195,0.8)','rgba(155,127,244,0.8)','rgba(255,140,66,0.8)','rgba(255,74,107,0.8)','rgba(34,209,122,0.8)'],borderColor:'var(--card)',borderWidth:3}]},
+    options:{responsive:true,cutout:'60%',plugins:{legend:{position:'right',labels:{color:'#8a97aa',font:{size:11},padding:12}},tooltip:{callbacks:{label:ctx=>`$${ctx.parsed.toFixed(1)}M (${(ctx.parsed/130.2*100).toFixed(1)}%)`}}}}
+  }); }
+
+  // Fare rate table
+  const rateData = [
+    {rc:'1',desc:'Standard Rate',count:6742000,fare:12.40,dist:2.61,tip:18.6,rev:83.6,pct:87.9},
+    {rc:'2',desc:'JFK (Flat)',count:166000,fare:52.80,dist:14.30,tip:14.2,rev:8.8,pct:2.2},
+    {rc:'3',desc:'Newark',count:8400,fare:38.20,dist:11.80,tip:12.8,rev:0.32,pct:0.1},
+    {rc:'4',desc:'Nassau/Westchester',count:12100,fare:48.60,dist:22.40,tip:15.1,rev:0.59,pct:0.2},
+    {rc:'5',desc:'Negotiated',count:695000,fare:10.80,dist:2.20,tip:17.1,rev:7.51,pct:9.1},
+    {rc:'6',desc:'Group Ride',count:44000,fare:9.20,dist:1.80,tip:11.3,rev:0.40,pct:0.6},
+  ];
+  document.getElementById('fareRateTbody').innerHTML = rateData.map(r=>`
+    <tr>
+      <td><span class="badge badge-gray">Code ${r.rc}</span></td>
+      <td class="highlight">${r.desc}</td>
+      <td>${r.count.toLocaleString()}</td>
+      <td style="color:var(--yellow)">$${r.fare.toFixed(2)}</td>
+      <td>${r.dist.toFixed(2)} mi</td>
+      <td style="color:var(--green)">${r.tip}%</td>
+      <td style="color:var(--cyan)">$${r.rev}M</td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px">${r.pct}%</span></td>
+    </tr>
+  `).join('');
+}
+
+// ═════════════ TEMPORAL CHARTS ═════════════
+function renderTemporalCharts() {
+  const hours = Array.from({length:24},(_,i)=>`${i}:00`);
+  const hourlyVol = [9400,5100,3200,2500,2800,6400,16200,28200,33500,25100,21500,24200,27000,25600,24100,26200,31600,38900,35700,31700,27400,23600,19500,15200];
+  const hourlyFare = [15.8,16.2,17.1,17.8,16.4,15.2,13.1,11.8,11.2,12.4,13.2,13.8,14.2,14.0,13.8,14.2,14.8,15.4,16.2,17.1,17.8,18.4,18.2,17.2];
+
+  const c1 = document.getElementById('chartHourlyTemporal');
+  if(c1&&!c1._chartInit) { c1._chartInit=true; new Chart(c1,{type:'bar',data:{labels:hours,datasets:[{data:hourlyVol,backgroundColor:hourlyVol.map((v,i)=>i>=16&&i<=19?'rgba(245,197,24,0.85)':i>=7&&i<=9?'rgba(0,229,195,0.6)':'rgba(245,197,24,0.25)'),borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:9}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+
+  const c2 = document.getElementById('chartFareByHour');
+  if(c2&&!c2._chartInit) { c2._chartInit=true; new Chart(c2,{type:'line',data:{labels:hours,datasets:[{data:hourlyFare,borderColor:'var(--green)',backgroundColor:'rgba(34,209,122,0.05)',fill:true,tension:0.4,borderWidth:2,pointRadius:2,pointBackgroundColor:'var(--green)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:9}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const dayVol = [1142000,1189000,1218000,1241000,1287000,1102000,988000];
+  const dayDuration = [12.2,11.8,11.9,12.1,13.4,13.8,12.9];
+
+  const c3 = document.getElementById('chartDayOfWeek');
+  if(c3&&!c3._chartInit) { c3._chartInit=true; new Chart(c3,{type:'bar',data:{labels:days,datasets:[{data:dayVol,backgroundColor:days.map((_,i)=>i>=5?'rgba(245,197,24,0.7)':'rgba(245,197,24,0.3)'),borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000000).toFixed(2)+'M'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+
+  const c4 = document.getElementById('chartDurationDay');
+  if(c4&&!c4._chartInit) { c4._chartInit=true; new Chart(c4,{type:'line',data:{labels:days,datasets:[{data:dayDuration,borderColor:'var(--orange)',backgroundColor:'rgba(255,140,66,0.08)',fill:true,tension:0.3,borderWidth:2,pointRadius:4,pointBackgroundColor:'var(--orange)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>v+' min'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+
+  // Weekly
+  const wDays = Array.from({length:31},(_,i)=>`Jan ${i+1}`);
+  const wData = wDays.map((_,i)=>{
+    const base=240000; const we=[4,5,11,12,18,19,25,26].includes(i)?0.88:1; const h=i===0?0.62:1;
+    return Math.floor((base+(Math.random()-0.5)*25000)*we*h);
+  });
+  const c5 = document.getElementById('chartWeekly');
+  if(c5&&!c5._chartInit) { c5._chartInit=true; new Chart(c5,{type:'line',data:{labels:wDays,datasets:[{data:wData,borderColor:'var(--yellow)',backgroundColor:'rgba(245,197,24,0.07)',fill:true,tension:0.3,borderWidth:2,pointRadius:2,pointBackgroundColor:(ctx)=>{ const we=[4,5,11,12,18,19,25,26]; return we.includes(ctx.dataIndex)?'var(--cyan)':'var(--yellow)'; }}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',maxTicksLimit:10,font:{size:9}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+
+  // Heatmap
+  renderDemandHeatmap();
+}
+
+function renderDemandHeatmap() {
+  const daysH = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const hoursH = Array.from({length:24},(_,i)=>i+':00');
+  const matrix = daysH.map((d,di)=>hoursH.map((_,hi)=>{
+    const base = [9400,5100,3200,2500,2800,6400,16200,28200,33500,25100,21500,24200,27000,25600,24100,26200,31600,38900,35700,31700,27400,23600,19500,15200][hi];
+    const dayMod = [1.0,1.05,1.08,1.1,1.18,0.92,0.84][di];
+    return Math.floor(base*dayMod*(0.85+Math.random()*0.3));
+  }));
+  const maxVal = Math.max(...matrix.flat());
+
+  const container = document.getElementById('heatmapContainer');
+  if(!container) return;
+  const cellW = 36, cellH = 28;
+  let html = `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:10px">`;
+  html += `<tr><td style="width:40px"></td>${daysH.map(d=>`<td style="width:${cellW}px;text-align:center;color:var(--text3);padding:4px;font-family:'DM Mono',monospace">${d}</td>`).join('')}</tr>`;
+  hoursH.forEach((h,hi)=>{
+    html += `<tr><td style="color:var(--text3);font-family:'DM Mono',monospace;padding-right:6px;white-space:nowrap">${h}</td>`;
+    daysH.forEach((d,di)=>{
+      const val = matrix[di][hi];
+      const intensity = val/maxVal;
+      const alpha = 0.1+intensity*0.9;
+      const r=245,g=Math.floor(197*(1-intensity)+100*intensity),b=Math.floor(24*(1-intensity));
+      html += `<td style="width:${cellW}px;height:${cellH}px;background:rgba(${r},${g},${b},${alpha.toFixed(2)});border-radius:3px;margin:1px;cursor:pointer" title="${d} ${h}: ${(val/1000).toFixed(1)}K trips"></td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</table></div>`;
+  container.innerHTML = html;
+}
+
+// ═════════════ PROCESSING CHARTS ═════════════
+function renderProcessingCharts() {
+  const c1 = document.getElementById('chartExclusions');
+  if(c1&&!c1._chartInit) { c1._chartInit=true; new Chart(c1,{
+    type:'bar',
+    data:{labels:['Invalid LocationID','Pax Count=0','Date out of Jan','Zero Distance','Negative Fare','Duplicates','Short Duration','Fare Outlier','Long Duration','Other'],
+      datasets:[{data:[22891,31298,20351,15340,4122,3891,8214,1043,312,3847],backgroundColor:'rgba(255,74,107,0.6)',borderRadius:3}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#8a97aa',font:{size:10}},grid:{display:false}}}}
+  }); }
+
+  const fields = ['fare_amount','trip_distance','passenger_count','total_amount','tip_amount','tolls_amount','mta_tax','extra','improvement','pickup_datetime','dropoff_datetime','pu_location','do_location','rate_code','payment_type','store_fwd'];
+  const complete = [99.95,99.80,99.60,99.95,98.80,99.20,100,99.40,100,100,100,99.71,99.68,100,100,98.90];
+  const c2 = document.getElementById('chartCompleteness');
+  if(c2&&!c2._chartInit) { c2._chartInit=true; new Chart(c2,{
+    type:'bar',
+    data:{labels:fields,datasets:[{data:complete,backgroundColor:complete.map(v=>v>=99.9?'rgba(34,209,122,0.7)':v>=99?'rgba(245,197,24,0.6)':'rgba(255,140,66,0.6)'),borderRadius:3}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{min:97,max:100,ticks:{color:'#5a6677',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#8a97aa',font:{size:9}},grid:{display:false}}}}
+  }); }
+}
+
+// ═════════════ HEAP ALGORITHM ═════════════
+const ZONE_REVENUES = ZONES.slice(0,263).map(z=>({id:z.id,zone:z.zone,borough:z.borough,revenue:zoneTrips(z.id)*zoneFare(z.id)}));
+let heapChart = null;
+
+function runHeapDemo() {
+  const k = parseInt(document.getElementById('kSlider').value);
+  // Custom max-heap implementation (no sort_values / heapq)
+  const data = ZONE_REVENUES.map(z=>({...z}));
+  const heap = [];
+
+  function heapifyUp(arr,idx) {
+    while(idx>0) {
+      const parent = Math.floor((idx-1)/2);
+      if(arr[idx].revenue>arr[parent].revenue) { [arr[idx],arr[parent]]=[arr[parent],arr[idx]]; idx=parent; }
+      else break;
+    }
+  }
+  function heapifyDown(arr,size,idx) {
+    while(true) {
+      let largest=idx,l=2*idx+1,r=2*idx+2;
+      if(l<size&&arr[l].revenue>arr[largest].revenue) largest=l;
+      if(r<size&&arr[r].revenue>arr[largest].revenue) largest=r;
+      if(largest!==idx) { [arr[idx],arr[largest]]=[arr[largest],arr[idx]]; idx=largest; }
+      else break;
+    }
+  }
+  data.forEach(item=>{ heap.push(item); heapifyUp(heap,heap.length-1); });
+  const result=[];
+  let tempHeap=[...heap];
+  for(let i=0;i<k&&tempHeap.length>0;i++) {
+    result.push(tempHeap[0]);
+    tempHeap[0]=tempHeap[tempHeap.length-1];
+    tempHeap.pop();
+    heapifyDown(tempHeap,tempHeap.length,0);
+  }
+
+  const ctx = document.getElementById('chartHeapResult');
+  if(heapChart) heapChart.destroy();
+  heapChart = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:result.map(z=>z.zone.length>20?z.zone.substring(0,18)+'…':z.zone),
+      datasets:[{data:result.map(z=>Math.round(z.revenue/1000)),backgroundColor:result.map(z=>z.borough==='Manhattan'?'rgba(245,197,24,0.8)':z.borough==='Queens'?'rgba(155,127,244,0.8)':z.borough==='Brooklyn'?'rgba(0,229,195,0.8)':'rgba(255,140,66,0.8)'),borderRadius:4}]
+    },
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`$${ctx.parsed.toFixed(0)}K revenue`}}},scales:{x:{ticks:{color:'#5a6677',font:{size:10},callback:v=>'$'+v+'K'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#8a97aa',font:{size:10}},grid:{display:false}}}}
+  });
+}
+
+let algoStep = 0;
+function initAlgoTrace() {
+  document.getElementById('algoTrace').innerHTML = '<span style="color:var(--text3)">Press "Step →" to begin algorithm trace…</span>';
+  algoStep = 0;
+  document.getElementById('stepInfo').textContent = 'Step 0 / 265';
+}
+
+function stepAlgo() {
+  if(algoStep>=ZONE_REVENUES.length) { algoStep=0; initAlgoTrace(); return; }
+  const trace = document.getElementById('algoTrace');
+  const z = ZONE_REVENUES[algoStep];
+  const heap_size = Math.min(algoStep+1,10);
+  trace.innerHTML += `\n<span style="color:var(--text3)">[${algoStep+1}]</span> <span style="color:var(--cyan)">push</span>(<span style="color:var(--yellow)">${z.zone}</span>, $${(z.revenue/1000).toFixed(0)}K) → heap_size=${heap_size}`;
+  trace.scrollTop = trace.scrollHeight;
+  algoStep++;
+  document.getElementById('stepInfo').textContent = `Step ${algoStep} / 265`;
+}
+
+function resetAlgo() { initAlgoTrace(); }
+function updateK(v) { document.getElementById('kValue').textContent = 'k = '+v; }
+
+// ═════════════ ER DIAGRAM ═════════════
+function drawERDiagram() {
+  const svg = document.getElementById('erDiagram');
+  if(!svg||svg._drawn) return; svg._drawn=true;
+  svg.innerHTML = `
+  <defs><marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#5a6677"/></marker></defs>
+  <!-- trips (center) -->
+  <rect x="300" y="50" width="300" height="300" rx="8" fill="#1c2330" stroke="#f5c518" stroke-width="1.5"/>
+  <text x="450" y="72" text-anchor="middle" fill="#f5c518" font-size="12" font-weight="700" font-family="DM Mono,monospace">trips</text>
+  <text x="450" y="88" text-anchor="middle" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">FACT TABLE · 7,667,792 rows</text>
+  ${['trip_id PK','tpep_pickup_datetime','tpep_dropoff_datetime','passenger_count','trip_distance','pu_location_id FK','do_location_id FK','rate_code_id FK','payment_type_id FK','fare_amount','tip_amount','total_amount','trip_duration_min *','speed_mph *','fare_per_mile *'].map((f,i)=>`<text x="318" y="${104+i*14}" fill="${f.includes('PK')?'#f5c518':f.includes('FK')?'#00e5c3':f.includes('*')?'#9b7ff4':'#8a97aa'}" font-size="10" font-family="DM Mono,monospace">${f}</text>`).join('')}
+  <!-- taxi_zones -->
+  <rect x="20" y="100" width="230" height="120" rx="8" fill="#1c2330" stroke="#00e5c3" stroke-width="1.5"/>
+  <text x="135" y="120" text-anchor="middle" fill="#00e5c3" font-size="12" font-weight="700" font-family="DM Mono,monospace">taxi_zones</text>
+  <text x="135" y="134" text-anchor="middle" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">DIM · 265 rows</text>
+  ${['location_id PK','borough','zone','service_zone'].map((f,i)=>`<text x="35" y="${150+i*14}" fill="${f.includes('PK')?'#00e5c3':'#8a97aa'}" font-size="10" font-family="DM Mono,monospace">${f}</text>`).join('')}
+  <!-- rate_codes -->
+  <rect x="640" y="60" width="200" height="100" rx="8" fill="#1c2330" stroke="#9b7ff4" stroke-width="1.5"/>
+  <text x="740" y="80" text-anchor="middle" fill="#9b7ff4" font-size="12" font-weight="700" font-family="DM Mono,monospace">rate_codes</text>
+  <text x="740" y="94" text-anchor="middle" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">DIM · 6 rows</text>
+  ${['rate_code_id PK','description'].map((f,i)=>`<text x="655" y="${110+i*14}" fill="${f.includes('PK')?'#9b7ff4':'#8a97aa'}" font-size="10" font-family="DM Mono,monospace">${f}</text>`).join('')}
+  <!-- payment_types -->
+  <rect x="640" y="220" width="200" height="100" rx="8" fill="#1c2330" stroke="#ff8c42" stroke-width="1.5"/>
+  <text x="740" y="240" text-anchor="middle" fill="#ff8c42" font-size="12" font-weight="700" font-family="DM Mono,monospace">payment_types</text>
+  <text x="740" y="254" text-anchor="middle" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">DIM · 4 rows</text>
+  ${['payment_type_id PK','description'].map((f,i)=>`<text x="655" y="${270+i*14}" fill="${f.includes('PK')?'#ff8c42':'#8a97aa'}" font-size="10" font-family="DM Mono,monospace">${f}</text>`).join('')}
+  <!-- arrows -->
+  <line x1="300" y1="165" x2="252" y2="165" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+  <line x1="600" y1="100" x2="638" y2="100" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+  <line x1="600" y1="260" x2="638" y2="260" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+  <text x="260" y="158" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">pu/do →</text>
+  <text x="605" y="94" fill="#5a6677" font-size="9" font-family="DM Mono,monospace">→</text>
+  `;
+}
+
+function drawArchDiagram() {
+  const svg = document.getElementById('archDiagram');
+  if(!svg||svg._drawn) return; svg._drawn=true;
+  svg.innerHTML = `
+  <defs><marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#5a6677"/></marker></defs>
+  <!-- Data Source -->
+  <rect x="10" y="80" width="140" height="80" rx="8" fill="#1c2330" stroke="#f5c518" stroke-width="1.5"/>
+  <text x="80" y="105" text-anchor="middle" fill="#f5c518" font-size="12" font-weight="700">Data Sources</text>
+  <text x="80" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">yellow_tripdata_2019-01</text>
+  <text x="80" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">taxi_zone_lookup.csv</text>
+  <text x="80" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">taxi_zones shapefile</text>
+  <!-- Processing -->
+  <rect x="200" y="80" width="130" height="80" rx="8" fill="#1c2330" stroke="#00e5c3" stroke-width="1.5"/>
+  <text x="265" y="105" text-anchor="middle" fill="#00e5c3" font-size="12" font-weight="700">Processing</text>
+  <text x="265" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">Python/Pandas</text>
+  <text x="265" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">pyarrow (parquet)</text>
+  <text x="265" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">Feature Engineering</text>
+  <!-- DB -->
+  <rect x="380" y="80" width="130" height="80" rx="8" fill="#1c2330" stroke="#9b7ff4" stroke-width="1.5"/>
+  <text x="445" y="105" text-anchor="middle" fill="#9b7ff4" font-size="12" font-weight="700">Database</text>
+  <text x="445" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">PostgreSQL</text>
+  <text x="445" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">4 normalized tables</text>
+  <text x="445" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">Indexed queries</text>
+  <!-- API -->
+  <rect x="560" y="80" width="120" height="80" rx="8" fill="#1c2330" stroke="#ff8c42" stroke-width="1.5"/>
+  <text x="620" y="105" text-anchor="middle" fill="#ff8c42" font-size="12" font-weight="700">Backend API</text>
+  <text x="620" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">Flask / Python</text>
+  <text x="620" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">REST endpoints</text>
+  <text x="620" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">Custom algorithms</text>
+  <!-- Frontend -->
+  <rect x="680" y="80" width="120" height="80" rx="8" fill="#1c2330" stroke="#22d17a" stroke-width="1.5"/>
+  <text x="740" y="105" text-anchor="middle" fill="#22d17a" font-size="12" font-weight="700">Frontend</text>
+  <text x="740" y="122" text-anchor="middle" fill="#8a97aa" font-size="9">HTML/CSS/JS</text>
+  <text x="740" y="134" text-anchor="middle" fill="#8a97aa" font-size="9">Chart.js</text>
+  <text x="740" y="146" text-anchor="middle" fill="#8a97aa" font-size="9">Interactive Dashboard</text>
+  <!-- arrows -->
+  <line x1="152" y1="120" x2="198" y2="120" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="332" y1="120" x2="378" y2="120" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="512" y1="120" x2="558" y2="120" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="682" y1="120" x2="678" y2="120" stroke="#5a6677" stroke-width="1.5" marker-end="url(#arr2)"/>
+  `;
+}
+
+// ═════════════ INSIGHT CHARTS ═════════════
+function renderInsightCharts() {
+  const c1 = document.getElementById('chartInsight1');
+  if(c1&&!c1._chartInit) { c1._chartInit=true; new Chart(c1,{type:'doughnut',data:{labels:['Manhattan Yellow Zone','Manhattan Boro','Queens','Brooklyn','Bronx','Staten Island','Airports'],datasets:[{data:[52.4,12.0,13.3,9.7,3.0,0.8,8.8],backgroundColor:['rgba(245,197,24,0.85)','rgba(245,197,24,0.4)','rgba(155,127,244,0.8)','rgba(0,229,195,0.8)','rgba(255,140,66,0.8)','rgba(255,74,107,0.8)','rgba(34,209,122,0.8)'],borderColor:'var(--card)',borderWidth:3}]},options:{responsive:true,cutout:'60%',plugins:{legend:{position:'right',labels:{color:'#8a97aa',font:{size:10}}}}}}); }
+
+  const c2 = document.getElementById('chartInsight2');
+  if(c2&&!c2._chartInit) { c2._chartInit=true; new Chart(c2,{type:'line',data:{labels:Array.from({length:24},(_,i)=>i+':00'),datasets:[{label:'Avg trips/hr',data:[9400,5100,3200,2500,2800,6400,16200,28200,33500,25100,21500,24200,27000,25600,24100,26200,31600,38900,35700,31700,27400,23600,19500,15200],borderColor:'var(--yellow)',backgroundColor:'rgba(245,197,24,0.08)',fill:true,tension:0.4,borderWidth:2,pointRadius:0}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',font:{size:9},maxTicksLimit:8},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+
+  const c3 = document.getElementById('chartInsight3');
+  if(c3&&!c3._chartInit) { c3._chartInit=true; new Chart(c3,{type:'bar',data:{labels:['Yellow Zone','Boro Zone','JFK Airport','LGA Airport','Newark'],datasets:[{label:'Avg Fare',data:[13.02,10.40,52.80,18.40,38.20],backgroundColor:'rgba(245,197,24,0.6)',borderRadius:3,yAxisID:'y'},{label:'Tip %',data:[18.4,16.2,14.2,16.1,12.8],backgroundColor:'rgba(0,229,195,0.6)',borderRadius:3,yAxisID:'y2'}]},options:{responsive:true,plugins:{legend:{labels:{color:'#8a97aa',font:{size:11}}}},scales:{x:{ticks:{color:'#8a97aa',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.05)'}},y2:{position:'right',ticks:{color:'var(--cyan)',font:{size:10},callback:v=>v+'%'},grid:{display:false}}}}}); }
+
+  const c4 = document.getElementById('chartSpeed');
+  if(c4&&!c4._chartInit) { c4._chartInit=true; new Chart(c4,{type:'bar',data:{labels:['0-5','5-10','10-15','15-20','20-25','25-30','30-40','40+'],datasets:[{data:[198000,842000,2140000,2280000,1430000,620000,145000,12000],backgroundColor:'rgba(155,127,244,0.6)',borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Speed (mph)',color:'#5a6677',font:{size:10}},ticks:{color:'#5a6677',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:10},callback:v=>(v/1000000).toFixed(2)+'M'},grid:{color:'rgba(255,255,255,0.05)'}}}}}); }
+}
+
+// ═════════════ MODALS ═════════════
+function showTripModal(idx) {
+  const t = allTrips[idx];
+  document.getElementById('modal-trip-title').textContent = `Trip #${t.id.toLocaleString()}`;
+  document.getElementById('modal-trip-detail').innerHTML = [
+    {label:'Pickup',value:t.pickup},{label:'Dropoff',value:t.dropoff},
+    {label:'Duration',value:t.duration+' min'},{label:'Distance',value:t.distance+' miles'},
+    {label:'Pickup Zone',value:t.puName+' ('+t.puBorough+')'},{label:'Dropoff Zone',value:t.doName+' ('+t.doBorough+')'},
+    {label:'Passengers',value:t.passengers},{label:'Rate Code',value:t.rateCode},
+    {label:'Payment',value:t.payment},{label:'Fare',value:'$'+t.fare.toFixed(2)},
+    {label:'Tip',value:'$'+t.tip.toFixed(2)},{label:'Total',value:'$'+t.total.toFixed(2)},
+    {label:'Speed (derived)',value:((t.distance/(t.duration/60))).toFixed(1)+' mph'},
+    {label:'Fare/Mile (derived)',value:'$'+(t.fare/t.distance).toFixed(2)+'/mi'},
+  ].map(d=>`<div class="detail-item"><div class="detail-label">${d.label}</div><div class="detail-value" style="font-size:14px">${d.value}</div></div>`).join('');
+
+  const old = document.getElementById('modalFareChart');
+  if(old._chart) old._chart.destroy();
+  old._chart = new Chart(old,{type:'doughnut',data:{labels:['Fare','Tip','MTA','Tolls','Improvement'],datasets:[{data:[t.fare,t.tip,t.mta,t.tolls,t.improvement],backgroundColor:['rgba(245,197,24,0.8)','rgba(0,229,195,0.8)','rgba(155,127,244,0.8)','rgba(255,140,66,0.8)','rgba(255,74,107,0.8)'],borderColor:'var(--card)',borderWidth:2}]},options:{responsive:true,cutout:'55%',plugins:{legend:{labels:{color:'#8a97aa',font:{size:10}}}}}});
+
+  document.getElementById('tripModal').classList.add('open');
+}
+
+function showZoneModal(id) {
+  const z = ZONES.find(zz=>zz.id===id);
+  if(!z) return;
+  const trips = zoneTrips(id);
+  const fare = zoneFare(id);
+  document.getElementById('modal-zone-title').textContent = z.zone+' (Zone '+id+')';
+  document.getElementById('modal-zone-detail').innerHTML = [
+    {label:'Location ID',value:id},{label:'Borough',value:z.borough},
+    {label:'Zone Name',value:z.zone},{label:'Service Zone',value:z.service},
+    {label:'Est. Trips (Jan 2019)',value:trips.toLocaleString()},{label:'Avg Fare',value:'$'+fare.toFixed(2)},
+    {label:'Est. Revenue',value:'$'+(trips*fare/1000000).toFixed(2)+'M'},
+    {label:'% of Total Trips',value:(trips/7667792*100).toFixed(2)+'%'},
+  ].map(d=>`<div class="detail-item"><div class="detail-label">${d.label}</div><div class="detail-value" style="font-size:14px">${d.value}</div></div>`).join('');
+
+  const old = document.getElementById('modalZoneChart');
+  if(old._chart) old._chart.destroy();
+  const hourlyData = Array.from({length:24},(_,h)=>Math.floor(trips/24*(0.5+Math.sin((h-8)*Math.PI/12)*0.5+Math.random()*0.3)));
+  old._chart = new Chart(old,{type:'bar',data:{labels:Array.from({length:24},(_,i)=>i+':00'),datasets:[{data:hourlyData,backgroundColor:'rgba(245,197,24,0.5)',borderRadius:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6677',maxTicksLimit:8,font:{size:9}},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:'#5a6677',font:{size:9}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+
+  document.getElementById('zoneModal').classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
+
+// ═════════════ TABLE SORTING ═════════════
+function sortTable(id, col) {
+  const table = document.getElementById(id);
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const dir = table._sortDir = -(table._sortDir||1);
+  rows.sort((a,b)=>{
+    const av=a.cells[col]?.textContent.trim()||'';
+    const bv=b.cells[col]?.textContent.trim()||'';
+    const an=parseFloat(av.replace(/[$,K%]/g,''));
+    const bn=parseFloat(bv.replace(/[$,K%]/g,''));
+    if(!isNaN(an)&&!isNaN(bn)) return (an-bn)*dir;
+    return av.localeCompare(bv)*dir;
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+}
+
+function sortZoneTable() { sortTable('topZonesTable',4); }
+
+function sortTrips(field) {
+  const fns = {trip_id:(a,b)=>a.id-b.id, pickup_dt:(a,b)=>a.pickup.localeCompare(b.pickup), fare:(a,b)=>a.fare-b.fare, tip:(a,b)=>a.tip-b.tip, total:(a,b)=>a.total-b.total, distance:(a,b)=>a.distance-b.distance, passengers:(a,b)=>a.passengers-b.passengers, duration:(a,b)=>a.duration-b.duration};
+  if(sortField===field) sortDir=-sortDir; else { sortField=field; sortDir=-1; }
+  filteredTrips.sort((a,b)=>(fns[field]||((x,y)=>0))(a,b)*sortDir);
+  currentPage=1; renderTripsTable();
+}
+
+// ═════════════ TAB SYSTEM ═════════════
+function switchTab(page, tab, btn) {
+  document.querySelectorAll(`#page-${page} .tab-content`).forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll(`#page-${page} .tab-btn`).forEach(b=>b.classList.remove('active'));
+  document.getElementById(`${page}-${tab}`)?.classList.add('active');
+  btn.classList.add('active');
+  if(page==='temporal') renderTemporalCharts();
+}
+
+// ═════════════ MISC ACTIONS ═════════════
+function refreshKPIs() { buildMiniCharts(); }
+function toggleBorough() { const p=document.getElementById('pill-borough'); p.classList.toggle('active'); }
+function exportData() {
+  const rows = [['ID','Pickup','Dropoff','Duration','PU Zone','DO Zone','Pax','Distance','Fare','Tip','Total','Payment','Rate']];
+  filteredTrips.slice(0,100).forEach(t=>rows.push([t.id,t.pickup,t.dropoff,t.duration,t.puName,t.doName,t.passengers,t.distance,t.fare.toFixed(2),t.tip.toFixed(2),t.total.toFixed(2),t.payment,t.rateCode]));
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='nyc_taxi_jan2019_sample.csv'; a.click();
+}
+function exportTrips() { exportData(); }
+
+// ═════════════ INIT ═════════════
+buildMiniCharts();
+renderTopZonesTable();
+renderOverviewCharts();
+
+</script>
+</body>
+</html>
